@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Up Next (§6), 60-min refresh variant — swapped in at runtime via
+     AppWidgetManager.updateAppWidgetProviderInfo() (§11, widget refresh
+     interval). Android 12+ (API 31) only; the app stays on the default
+     30-min file (up_next_widget_info.xml) below that. -->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:minWidth="130dp"
+    android:minHeight="60dp"
+    android:targetCellWidth="4"
+    android:targetCellHeight="2"
+    android:updatePeriodMillis="3600000"
+    android:initialLayout="@layout/widget_up_next"
+    android:resizeMode="horizontal|vertical"
+    android:widgetCategory="home_screen" />

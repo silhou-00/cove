@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Up Next widget's per-row complete toggle (§6/§17-adjacent — see
+     UpNextWidgetProvider.kt). An open, unfilled ring since the widget
+     only ever lists open items — a tap completes it and the row simply
+     drops out of the list on the next refresh, so there's no "checked"
+     state to ever render. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="oval">
+    <stroke android:width="1.5dp" android:color="#CFC7B8"/>
+    <solid android:color="@android:color/transparent"/>
+</shape>

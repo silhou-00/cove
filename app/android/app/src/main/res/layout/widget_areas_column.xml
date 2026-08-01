@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One area column in the Areas widget (§6/§17) — added dynamically via
+     `RemoteViews.addView` in AreasWidgetProvider.kt, once per area, so the
+     row scales to however many areas exist rather than a fixed 4 slots.
+     `layout_weight`/margins on this root are honored by the parent
+     LinearLayout exactly as if this were written inline. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="0dp"
+    android:layout_height="wrap_content"
+    android:layout_weight="1"
+    android:layout_marginStart="5dp"
+    android:layout_marginEnd="5dp"
+    android:orientation="vertical"
+    android:gravity="center_horizontal">
+
+    <ImageView
+        android:id="@+id/col_bar"
+        android:layout_width="match_parent"
+        android:layout_height="6dp"
+        android:scaleType="fitXY"/>
+
+    <LinearLayout android:layout_width="match_parent" android:layout_height="5dp"/>
+
+    <TextView
+        android:id="@+id/col_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="10.5sp"
+        android:fontFamily="@font/ibm_plex_mono_regular"
+        android:textColor="#6B6459"/>
+
+</LinearLayout>

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="108" height="108" viewBox="0 0 108 108">
+  <title>Cove — adaptive icon foreground</title>
+  <g shape-rendering="crispEdges">
+    <rect x="32.00" y="32.00" width="44.06" height="5.56" fill="#F4F1EB"></rect>
+    <rect x="32.00" y="37.50" width="11.06" height="5.56" fill="#F4F1EB"></rect>
+    <rect x="43.00" y="37.50" width="33.06" height="5.56" fill="#E8C88A"></rect>
+    <rect x="32.00" y="43.00" width="11.06" height="5.56" fill="#F4F1EB"></rect>
+    <rect x="48.50" y="43.00" width="22.06" height="5.56" fill="#E8C88A"></rect>
+    <rect x="32.00" y="48.50" width="11.06" height="5.56" fill="#F4F1EB"></rect>
+    <rect x="54.00" y="48.50" width="11.06" height="5.56" fill="#E8C88A"></rect>
+    <rect x="32.00" y="54.00" width="11.06" height="5.56" fill="#F4F1EB"></rect>
+    <rect x="32.00" y="59.50" width="11.06" height="5.56" fill="#F4F1EB"></rect>
+    <rect x="32.00" y="65.00" width="44.06" height="5.56" fill="#F4F1EB"></rect>
+  </g>
+</svg>

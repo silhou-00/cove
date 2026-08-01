@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Up Next widget (§6) — populated in UpNextWidgetProvider.kt. Only
+     LinearLayout/TextView/ProgressBar are used — RemoteViews only allows
+     a fixed allowlist of view classes and rejects a bare `View` (used
+     to fail with "Class not allowed to be inflated android.view.View";
+     LinearLayout with no children stands in for spacers/color bars/dots
+     instead). Text sizes are bumped up from the design mockup's raw px
+     values — those assume the in-app Flutter screens' `context.s()`
+     scaling (up to 1.35x), which doesn't exist for native RemoteViews.
+
+     Each row's `rowN_check` circle completes that item/occurrence via a
+     `home_widget` background callback (no app launch) — see
+     UpNextWidgetProvider.kt and lib/app/widget_background.dart. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_card_background"
+    android:orientation="vertical"
+    android:padding="14dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+        <TextView
+            android:id="@+id/header_label"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="UP NEXT"
+            android:textSize="11sp"
+            android:letterSpacing="0.16"
+            android:fontFamily="@font/ibm_plex_mono_medium"
+            android:textColor="#8A8175"/>
+        <TextView
+            android:id="@+id/header_count"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="11sp"
+            android:fontFamily="@font/ibm_plex_mono_regular"
+            android:textColor="#A4543A"/>
+    </LinearLayout>
+
+    <LinearLayout android:layout_width="match_parent" android:layout_height="8dp"/>
+
+    <TextView
+        android:id="@+id/empty_state"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Nothing due — nice."
+        android:textSize="14sp"
+        android:fontFamily="@font/ibm_plex_sans"
+        android:textColor="#6B6459"
+        android:visibility="gone"/>
+
+    <LinearLayout
+        android:id="@+id/row1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingTop="6dp"
+        android:paddingBottom="6dp">
+        <LinearLayout android:id="@+id/row1_bar" android:layout_width="2dp" android:layout_height="32dp" android:background="#8A8175"/>
+        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="10dp" android:orientation="vertical">
+            <TextView android:id="@+id/row1_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="15sp" android:fontFamily="@font/ibm_plex_sans" android:textColor="#1B1917" android:singleLine="true" android:ellipsize="end"/>
+            <TextView android:id="@+id/row1_meta" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="11.5sp" android:fontFamily="@font/ibm_plex_mono_regular" android:textColor="#6B6459"/>
+        </LinearLayout>
+        <LinearLayout android:id="@+id/row1_check" android:layout_width="20dp" android:layout_height="20dp" android:layout_marginStart="10dp" android:background="@drawable/widget_check_circle"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/row2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingTop="6dp"
+        android:paddingBottom="6dp">
+        <LinearLayout android:id="@+id/row2_bar" android:layout_width="2dp" android:layout_height="32dp" android:background="#8A8175"/>
+        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="10dp" android:orientation="vertical">
+            <TextView android:id="@+id/row2_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="15sp" android:fontFamily="@font/ibm_plex_sans" android:textColor="#1B1917" android:singleLine="true" android:ellipsize="end"/>
+            <TextView android:id="@+id/row2_meta" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="11.5sp" android:fontFamily="@font/ibm_plex_mono_regular" android:textColor="#6B6459"/>
+        </LinearLayout>
+        <LinearLayout android:id="@+id/row2_check" android:layout_width="20dp" android:layout_height="20dp" android:layout_marginStart="10dp" android:background="@drawable/widget_check_circle"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/row3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingTop="6dp"
+        android:paddingBottom="6dp">
+        <LinearLayout android:id="@+id/row3_bar" android:layout_width="2dp" android:layout_height="32dp" android:background="#8A8175"/>
+        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="10dp" android:orientation="vertical">
+            <TextView android:id="@+id/row3_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="15sp" android:fontFamily="@font/ibm_plex_sans" android:textColor="#1B1917" android:singleLine="true" android:ellipsize="end"/>
+            <TextView android:id="@+id/row3_meta" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="11.5sp" android:fontFamily="@font/ibm_plex_mono_regular" android:textColor="#6B6459"/>
+        </LinearLayout>
+        <LinearLayout android:id="@+id/row3_check" android:layout_width="20dp" android:layout_height="20dp" android:layout_marginStart="10dp" android:background="@drawable/widget_check_circle"/>
+    </LinearLayout>
+
+</LinearLayout>

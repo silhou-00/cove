@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Matches AppColors.dark in lib/app/theme.dart — the splash screen
+         is always dark, regardless of system light/dark mode, so cold
+         start doesn't flash white before the Dart splash paints. -->
+    <color name="launch_background">#1B1917</color>
+    <!-- Adaptive launcher icon background (§13) — matches AppColors.accent. -->
+    <color name="ic_launcher_background">#A4543A</color>
+</resources>

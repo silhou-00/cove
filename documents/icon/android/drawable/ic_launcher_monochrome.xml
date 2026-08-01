@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Monochrome · Cove -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#000000"
+        android:pathData="M32.00,32.00h44.00v5.50h-44.00z M32.00,37.50h11.00v5.50h-11.00z M43.00,37.50h33.00v5.50h-33.00z M32.00,43.00h11.00v5.50h-11.00z M48.50,43.00h22.00v5.50h-22.00z M32.00,48.50h11.00v5.50h-11.00z M54.00,48.50h11.00v5.50h-11.00z M32.00,54.00h11.00v5.50h-11.00z M32.00,59.50h11.00v5.50h-11.00z M32.00,65.00h44.00v5.50h-44.00z" />
+</vector>
