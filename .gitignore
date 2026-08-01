@@ -53,3 +53,4 @@ app/**/app.*.map.json
 /app/android/app/release
 
 blueprint-out
+documents
