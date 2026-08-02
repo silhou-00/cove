@@ -118,17 +118,23 @@ class CalendarSyncRepository {
   /// Requests the write scope on top of the connection's existing
   /// read-only grant (§9, export) — call once, the first time export is
   /// switched on. Returns false if the user declines the re-consent
-  /// prompt; the connection and import keep working either way, only
-  /// export stays unavailable. `canAccessScopes` short-circuits the
-  /// prompt entirely if the scope was already granted in a previous
-  /// session.
+  /// prompt or there's no signed-in account; the connection and import
+  /// keep working either way, only export stays unavailable.
+  ///
+  /// Deliberately does not pre-check via `canAccessScopes` — the Android
+  /// platform implementation (`google_sign_in_android`) never overrides
+  /// it, so it always throws `UnimplementedError` there regardless of
+  /// account/scope state. `requestScopes` alone already no-ops (no
+  /// prompt shown) when the scope was granted in a previous session, so
+  /// nothing is lost by calling it unconditionally.
   Future<bool> ensureExportScope() async {
     const scope = calendar.CalendarApi.calendarEventsScope;
-    final account = _googleSignIn.currentUser;
-    if (account != null && await _googleSignIn.canAccessScopes([scope])) {
-      return true;
+    if (_googleSignIn.currentUser == null) return false;
+    try {
+      return await _googleSignIn.requestScopes([scope]);
+    } catch (_) {
+      return false;
     }
-    return _googleSignIn.requestScopes([scope]);
   }
 
   Future<calendar.CalendarApi?> _calendarApi() async {
