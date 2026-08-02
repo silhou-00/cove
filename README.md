@@ -1,5 +1,7 @@
 # Cove
 
+> **Note:** Google Calendar sync may not work for you. It requires Google to verify the app, which hasn't been submitted — only Google accounts manually added as test users can currently connect. Everything else works normally without it.
+
 ## What is Cove
 
 Cove is a personal task and agenda manager built for Android with Flutter. It's a single-user, offline-first app: everything you enter — tasks, schedules, recurring items, categories — is stored in a local database on your phone, with no account, no login, and no backend server involved at any point.
