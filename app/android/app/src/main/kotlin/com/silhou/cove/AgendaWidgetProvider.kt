@@ -54,7 +54,13 @@ class AgendaWidgetProvider : AppWidgetProvider() {
 
       val scheduled = WidgetDateUtils.parseIso(obj.optString("scheduledStart", null))
       if (scheduled != null && isToday(scheduled, today)) {
-        rows.add(Row(scheduled.hour * 60 + scheduled.minute, WidgetDateUtils.timeString(scheduled), title, areaColor, id))
+        val scheduledEnd = WidgetDateUtils.parseIso(obj.optString("scheduledEnd", null))
+        val label = if (scheduledEnd != null) {
+          "${WidgetDateUtils.timeString(scheduled)}\n${WidgetDateUtils.timeString(scheduledEnd)}"
+        } else {
+          WidgetDateUtils.timeString(scheduled)
+        }
+        rows.add(Row(scheduled.hour * 60 + scheduled.minute, label, title, areaColor, id))
         continue
       }
       val due = WidgetDateUtils.parseIso(obj.optString("dueAt", null))

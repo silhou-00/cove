@@ -75,10 +75,15 @@ class UpNextWidgetProvider : AppWidgetProvider() {
       val obj = items.getJSONObject(i)
       val title = obj.optString("title", "Untitled item")
       val area = obj.optString("area", "")
-      val dueLabel = formatDueLabel(obj.optString("dueAt", null))
+      val scheduledStart = obj.optString("scheduledStart", null)
+      val timeLabel = if (scheduledStart.isNullOrEmpty()) {
+        formatDueLabel(obj.optString("dueAt", null))
+      } else {
+        formatScheduledLabel(scheduledStart, obj.optString("scheduledEnd", null))
+      }
 
       views.setTextViewText(titleIds[i], title)
-      views.setTextViewText(metaIds[i], if (area.isNotEmpty()) "$dueLabel · ${area.uppercase()}" else dueLabel)
+      views.setTextViewText(metaIds[i], if (area.isNotEmpty()) "$timeLabel · ${area.uppercase()}" else timeLabel)
 
       val barColor =
           try {
@@ -110,5 +115,16 @@ class UpNextWidgetProvider : AppWidgetProvider() {
     val parsed = WidgetDateUtils.parseIso(iso) ?: return ""
     val timeStr = if (WidgetDateUtils.isEndOfDaySentinel(parsed)) null else WidgetDateUtils.timeString(parsed)
     return WidgetDateUtils.relativeDayLabel(parsed, timeStr)
+  }
+
+  private fun formatScheduledLabel(startIso: String?, endIso: String?): String {
+    val start = WidgetDateUtils.parseIso(startIso) ?: return ""
+    val end = WidgetDateUtils.parseIso(endIso)
+    val timeStr = if (end != null) {
+      "${WidgetDateUtils.timeString(start)}–${WidgetDateUtils.timeString(end)}"
+    } else {
+      WidgetDateUtils.timeString(start)
+    }
+    return WidgetDateUtils.relativeDayLabel(start, timeStr)
   }
 }

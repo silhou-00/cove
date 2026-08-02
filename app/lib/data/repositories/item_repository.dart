@@ -239,9 +239,12 @@ class ItemRepository {
     );
   }
 
-  /// The Up Next list (§5/§6): due items from [from] onward, flat and
-  /// date-sorted, regardless of area. Screens bucket these into date
-  /// groups client-side; this just returns them in order.
+  /// The Up Next list (§5/§6): open items from [from] onward, flat and
+  /// date-sorted by effective date (`scheduledStart` — a time block — if
+  /// set, else `dueAt`), regardless of area. Screens bucket these into
+  /// date groups client-side; this just returns them in order. Includes
+  /// time-blocked items, not just due-dated ones — a scheduled-only item
+  /// belongs on Up Next the same as a due one.
   Stream<List<ItemWithArea>> watchUpcoming({required DateTime from}) {
     final start = _startOfDay(from);
 
@@ -252,9 +255,13 @@ class ItemRepository {
           ..where(
             _isOpenItem(_db.items) &
                 _db.items.recurrenceRule.isNull() &
-                _db.items.dueAt.isBiggerOrEqualValue(start),
+                (_db.items.dueAt.isBiggerOrEqualValue(start) |
+                    _db.items.scheduledStart.isBiggerOrEqualValue(start)),
           )
-          ..orderBy([OrderingTerm(expression: _db.items.dueAt)]);
+          ..orderBy([
+            OrderingTerm(expression: _db.items.scheduledStart),
+            OrderingTerm(expression: _db.items.dueAt),
+          ]);
 
     final occQuery =
         _db.select(_db.occurrences).join([
@@ -267,17 +274,24 @@ class ItemRepository {
           ..where(
             _isOpenItem(_db.items) &
                 _notSkipped(_db.occurrences) &
-                _db.occurrences.scheduledStart.isNull() &
-                _db.occurrences.date.isBiggerOrEqualValue(start),
+                ((_db.occurrences.scheduledStart.isNull() &
+                        _db.occurrences.date.isBiggerOrEqualValue(start)) |
+                    (_db.occurrences.scheduledStart.isNotNull() &
+                        _db.occurrences.scheduledStart.isBiggerOrEqualValue(
+                          start,
+                        ))),
           )
           ..orderBy([OrderingTerm(expression: _db.occurrences.date)]);
 
     return combineLatest2(
       directQuery.watch().map(_mapItemWithArea),
       occQuery.watch().map(_mapOccurrenceRows),
-      (direct, occurrences) =>
-          [...direct, ...occurrences]
-            ..sort((a, b) => _compareNullable(a.item.dueAt, b.item.dueAt)),
+      (direct, occurrences) => [...direct, ...occurrences]..sort(
+        (a, b) => _compareNullable(
+          a.item.scheduledStart ?? a.item.dueAt,
+          b.item.scheduledStart ?? b.item.dueAt,
+        ),
+      ),
     );
   }
 
@@ -1153,8 +1167,9 @@ class ItemRepository {
     );
   }
 
-  /// Up Next (§6): open items with a due date, sorted ascending. Recurring
-  /// templates are excluded in favor of their materialized due-kind
+  /// Up Next (§6): open items with a due date or a time block, sorted
+  /// ascending by effective date (`scheduledStart` if set, else `dueAt`).
+  /// Recurring templates are excluded in favor of their materialized
   /// `Occurrence` rows, same rule as the in-app read paths.
   Future<String> _refreshUpNextCache() async {
     final directQuery =
@@ -1162,7 +1177,8 @@ class ItemRepository {
           leftOuterJoin(_db.areas, _db.areas.id.equalsExp(_db.items.areaId)),
         ])..where(
           _db.items.status.equalsValue(ItemStatus.open) &
-              _db.items.dueAt.isNotNull() &
+              (_db.items.dueAt.isNotNull() |
+                  _db.items.scheduledStart.isNotNull()) &
               _db.items.recurrenceRule.isNull(),
         );
     final direct = await directQuery.get();
@@ -1173,8 +1189,7 @@ class ItemRepository {
           leftOuterJoin(_db.areas, _db.areas.id.equalsExp(_db.items.areaId)),
         ])..where(
           _isOpenItem(_db.items) &
-              _db.occurrences.status.equalsValue(OccurrenceStatus.open) &
-              _db.occurrences.scheduledStart.isNull(),
+              _db.occurrences.status.equalsValue(OccurrenceStatus.open),
         );
     final occRows = await occQuery.get();
 
@@ -1196,7 +1211,12 @@ class ItemRepository {
           occurrenceId: row.readTable(_db.occurrences).id,
         ),
       ),
-    ]..sort((a, b) => _compareNullable(a.item.dueAt, b.item.dueAt));
+    ]..sort(
+      (a, b) => _compareNullable(
+        a.item.scheduledStart ?? a.item.dueAt,
+        b.item.scheduledStart ?? b.item.dueAt,
+      ),
+    );
 
     // `occurrenceId` lets the Up Next widget's complete-toggle (§6/§17,
     // UpNextWidgetProvider.kt) call the right repository method —
@@ -1210,7 +1230,9 @@ class ItemRepository {
         'title': e.item.shortTitle ?? e.item.title,
         'area': e.area?.name,
         'areaColor': e.area?.color,
-        'dueAt': e.item.dueAt!.toIso8601String(),
+        'dueAt': e.item.dueAt?.toIso8601String(),
+        'scheduledStart': e.item.scheduledStart?.toIso8601String(),
+        'scheduledEnd': e.item.scheduledEnd?.toIso8601String(),
       };
     }).toList();
     final payloadJson = jsonEncode(payload);

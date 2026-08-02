@@ -170,7 +170,7 @@ final areaProgressProvider =
           .watchAreaProgress(
             now: today,
             firstWeekday:
-                ref.watch(firstDayOfWeekProvider).value ?? DateTime.monday,
+                ref.watch(firstDayOfWeekProvider).value ?? DateTime.sunday,
           ),
     );
 

@@ -168,6 +168,17 @@ class NotificationService {
     return null;
   }
 
+  /// Requests the Android 13+ notification permission proactively — from
+  /// onboarding or the moment Settings' notifications toggle is turned on,
+  /// rather than only ever surfacing incidentally the first time an item
+  /// mutation happens to schedule a reminder. Shares the same
+  /// once-ever-asked flag as [_scheduleCore]'s own call, so calling this
+  /// first just means the later, implicit call is a no-op.
+  Future<void> requestPermissionIfNeeded() async {
+    await _ensureInitialized();
+    await _ensurePermission();
+  }
+
   Future<void> _ensurePermission() async {
     final alreadyAsked = await _settings.getValue(_permissionRequestedKey);
     if (alreadyAsked == 'true') return;

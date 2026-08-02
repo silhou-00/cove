@@ -303,10 +303,8 @@ class _AgendaScreenState extends ConsumerState<AgendaScreen> {
                   onArchive: _bulkArchive,
                   onMoveArea: _bulkMoveArea,
                 )
-              else if (_view == _View.today)
-                _TodayHeader(today: today)
               else
-                const _UpNextHeader(),
+                _TodayHeader(today: today),
               SizedBox(height: context.s(12)),
               _TabSwitcher(
                 view: _view,
@@ -551,25 +549,6 @@ class _DashedTrackPainter extends CustomPainter {
       oldDelegate.fraction != fraction ||
       oldDelegate.fillColor != fillColor ||
       oldDelegate.trackColor != trackColor;
-}
-
-class _UpNextHeader extends StatelessWidget {
-  const _UpNextHeader();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: context.s(8)),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text('Up Next', style: AppTypography.sectionHeader(context)),
-          ),
-          const CosmeticCluster(),
-        ],
-      ),
-    );
-  }
 }
 
 class _TabSwitcher extends StatelessWidget {
@@ -820,7 +799,8 @@ class _UpNextBody extends ConsumerWidget {
 
     final groups = <String, List<ItemWithArea>>{};
     for (final iwa in items) {
-      final label = _bucketLabel(today, iwa.item.dueAt!);
+      final effectiveDate = iwa.item.scheduledStart ?? iwa.item.dueAt!;
+      final label = _bucketLabel(today, effectiveDate);
       groups.putIfAbsent(label, () => []).add(iwa);
     }
 
@@ -854,13 +834,22 @@ class _UpNextBody extends ConsumerWidget {
             onLongPress: onLongPress,
             onSelectTap: onSelectTap,
             onReorder: onReorder,
-            trailingBuilder: (iwa) => Text(
-              dueTimeLabel(iwa.item.dueAt!) ??
-                  _weekdayNames[iwa.item.dueAt!.weekday - 1],
-              style: AppTypography.mono(
-                context,
-              ).copyWith(fontSize: context.s(10.5)),
-            ),
+            trailingBuilder: (iwa) {
+              final item = iwa.item;
+              final label = item.scheduledStart != null
+                  ? (item.scheduledEnd != null
+                        ? '${timeLabel(item.scheduledStart!)}–'
+                              '${timeLabel(item.scheduledEnd!)}'
+                        : timeLabel(item.scheduledStart!))
+                  : (dueTimeLabel(item.dueAt!) ??
+                        _weekdayNames[item.dueAt!.weekday - 1]);
+              return Text(
+                label,
+                style: AppTypography.mono(
+                  context,
+                ).copyWith(fontSize: context.s(10.5)),
+              );
+            },
           ),
           SizedBox(height: context.s(14)),
         ],

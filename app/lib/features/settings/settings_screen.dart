@@ -114,6 +114,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   /// or off entirely, same shape as the App Lock toggle below.
   Future<void> _onToggleNotifications(bool value) async {
     await ref.read(settingsRepositoryProvider).setNotificationsEnabled(value);
+    if (value) {
+      await ref.read(notificationServiceProvider).requestPermissionIfNeeded();
+    }
     if (mounted) setState(() => _notificationsEnabled = value);
   }
 
@@ -140,7 +143,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       weekday == DateTime.monday ? 'Monday' : 'Sunday';
 
   Future<void> _pickFirstDayOfWeek() async {
-    final current = ref.read(firstDayOfWeekProvider).value ?? DateTime.monday;
+    final current = ref.read(firstDayOfWeekProvider).value ?? DateTime.sunday;
     final chosen = await _pickOption<int>(
       context,
       title: 'First day of week',
@@ -465,7 +468,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       label: 'First day of week',
                       value: _firstDayLabel(
                         ref.watch(firstDayOfWeekProvider).value ??
-                            DateTime.monday,
+                            DateTime.sunday,
                       ),
                       onTap: _pickFirstDayOfWeek,
                     ),

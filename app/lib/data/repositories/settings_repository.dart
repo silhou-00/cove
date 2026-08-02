@@ -97,7 +97,7 @@ class SettingsRepository {
   /// `startOfWeek()` without a lookup table.
   Future<int> getFirstDayOfWeek() async {
     final value = await getValue(firstDayOfWeekKey);
-    return value == 'sunday' ? DateTime.sunday : DateTime.monday;
+    return value == 'monday' ? DateTime.monday : DateTime.sunday;
   }
 
   Future<void> setFirstDayOfWeek(int weekday) => setValue(

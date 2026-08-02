@@ -44,9 +44,17 @@ class _CoveAppState extends ConsumerState<CoveApp> {
     final service = ref.read(notificationServiceProvider);
     _notificationTapSubscription = service.itemTapped.listen(
       (itemId) => appRouter.go('/item/$itemId'),
+      onError: (_) {},
     );
-    final launchItemId = await service.consumeLaunchPayload();
-    if (launchItemId != null) appRouter.go('/item/$launchItemId');
+    try {
+      final launchItemId = await service.consumeLaunchPayload();
+      if (launchItemId != null) appRouter.go('/item/$launchItemId');
+    } catch (_) {
+      // A cold start's platform channels can still be finishing
+      // registration the moment this runs (§12) — a transient failure
+      // here must never crash the app; it just means this one launch
+      // doesn't deep-link, the same as opening Cove normally.
+    }
   }
 
   /// Home-screen widget taps (§6). `home_widget`'s own launch-intent
@@ -58,9 +66,27 @@ class _CoveAppState extends ConsumerState<CoveApp> {
   Future<void> _bootstrapWidgetTaps() async {
     _widgetTapSubscription = HomeWidget.widgetClicked.listen(
       _openFromWidgetUri,
+      onError: (_) {},
     );
-    final launchUri = await HomeWidget.initiallyLaunchedFromHomeWidget();
-    _openFromWidgetUri(launchUri);
+    _openFromWidgetUri(await _initialWidgetLaunchUri());
+  }
+
+  /// A widget tap that cold-starts the app can race `home_widget`'s own
+  /// platform-channel registration (§12) — this call can throw once,
+  /// intermittently, right after launch, then succeed a moment later.
+  /// One retry after a short delay absorbs that instead of surfacing an
+  /// error on an otherwise-normal widget tap.
+  Future<Uri?> _initialWidgetLaunchUri() async {
+    try {
+      return await HomeWidget.initiallyLaunchedFromHomeWidget();
+    } catch (_) {
+      try {
+        await Future.delayed(const Duration(milliseconds: 300));
+        return await HomeWidget.initiallyLaunchedFromHomeWidget();
+      } catch (_) {
+        return null;
+      }
+    }
   }
 
   void _openFromWidgetUri(Uri? uri) {

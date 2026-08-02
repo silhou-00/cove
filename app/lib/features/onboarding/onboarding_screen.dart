@@ -64,6 +64,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           lastName: lastName.isEmpty ? null : lastName,
         );
     await ref.read(settingsRepositoryProvider).markOnboardingComplete();
+    await ref.read(notificationServiceProvider).requestPermissionIfNeeded();
     if (!mounted) return;
     context.go('/home', extra: (tabIndex: homeTabIndex, upNext: false));
   }

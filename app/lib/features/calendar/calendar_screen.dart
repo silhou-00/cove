@@ -15,7 +15,15 @@ import '../shared/cosmetic_cluster.dart';
 /// external event is never visually mistaken for a real Cove area.
 const _externalEventColor = Color(0xFF5B7A99);
 
-const _weekdayLetters = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+// Monday-indexed (day.weekday - 1); TH/SA disambiguate Thursday from
+// Tuesday and Saturday from Sunday, matching the "SMTWTHFSA" convention.
+const _weekdayLetters = ['M', 'T', 'W', 'TH', 'F', 'SA', 'S'];
+
+/// [_weekdayLetters] rotated to start at [firstWeekday] (`DateTime.monday`
+/// or `DateTime.sunday`) — used wherever a header row must read in the
+/// same left-to-right order as the day grid beneath it.
+List<String> _weekdayLettersFrom(int firstWeekday) =>
+    List.generate(7, (i) => _weekdayLetters[(firstWeekday - 1 + i) % 7]);
 const _monthNamesShort = [
   'JAN',
   'FEB',
@@ -278,7 +286,7 @@ class _WeekView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final firstWeekday =
-        ref.watch(firstDayOfWeekProvider).value ?? DateTime.monday;
+        ref.watch(firstDayOfWeekProvider).value ?? DateTime.sunday;
     final weekStart = startOfWeek(referenceDate, firstWeekday);
     final weekEnd = weekStart.add(const Duration(days: 7));
     final days = List.generate(7, (i) => weekStart.add(Duration(days: i)));
@@ -626,13 +634,15 @@ class _MonthView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final firstWeekday =
+        ref.watch(firstDayOfWeekProvider).value ?? DateTime.sunday;
     final monthStart = DateTime(referenceDate.year, referenceDate.month, 1);
     final daysInMonth = DateTime(
       referenceDate.year,
       referenceDate.month + 1,
       0,
     ).day;
-    final leadingBlanks = monthStart.weekday - 1;
+    final leadingBlanks = (monthStart.weekday - firstWeekday + 7) % 7;
     final totalCells = ((leadingBlanks + daysInMonth + 6) ~/ 7) * 7;
     final gridStart = monthStart.subtract(Duration(days: leadingBlanks));
     final gridEnd = gridStart.add(Duration(days: totalCells));
@@ -697,7 +707,7 @@ class _MonthView extends ConsumerWidget {
         children: [
           Row(
             children: [
-              for (final letter in _weekdayLetters)
+              for (final letter in _weekdayLettersFrom(firstWeekday))
                 Expanded(
                   child: Center(
                     child: Text(

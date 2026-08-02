@@ -31,8 +31,8 @@ void main() {
   });
 
   group('First day of week (§11)', () {
-    test('defaults to Monday when unset', () async {
-      expect(await repo.getFirstDayOfWeek(), DateTime.monday);
+    test('defaults to Sunday when unset', () async {
+      expect(await repo.getFirstDayOfWeek(), DateTime.sunday);
     });
 
     test('persists Sunday, then persists switching back to Monday', () async {

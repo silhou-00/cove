@@ -36,7 +36,7 @@ class AreasScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final today = _startOfDay(DateTime.now());
     final firstWeekday =
-        ref.watch(firstDayOfWeekProvider).value ?? DateTime.monday;
+        ref.watch(firstDayOfWeekProvider).value ?? DateTime.sunday;
     final weekStart = startOfWeek(today, firstWeekday);
     final progressAsync = ref.watch(areaProgressProvider(today));
 

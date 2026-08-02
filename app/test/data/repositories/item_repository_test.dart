@@ -614,6 +614,29 @@ void main() {
       expect(rows.map((r) => r.item.title), ['Reading response', 'Pay rent']);
     });
 
+    test(
+      'watchUpcoming includes time-blocked (scheduled-only) items, sorted by effective date',
+      () async {
+        await itemRepo.create(
+          title: 'Due later',
+          dueAt: DateTime(2026, 7, 30, 23, 59),
+        );
+        await itemRepo.create(
+          title: 'Time-blocked meeting',
+          scheduledStart: DateTime(2026, 7, 29, 9, 0),
+          scheduledEnd: DateTime(2026, 7, 29, 10, 0),
+        );
+
+        final tomorrow = monday.add(const Duration(days: 1));
+        final rows = await itemRepo.watchUpcoming(from: tomorrow).first;
+
+        expect(rows.map((r) => r.item.title), [
+          'Time-blocked meeting',
+          'Due later',
+        ]);
+      },
+    );
+
     test('area join resolves the right area, or null when unset', () async {
       final areas = await areaRepo.getAll();
       final school = areas.firstWhere((a) => a.name == 'School');
