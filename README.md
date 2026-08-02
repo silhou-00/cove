@@ -48,6 +48,20 @@ On top of that foundation, Cove adds a lightweight motivation layer: completing 
 
 Cove is offline-first: no account, no cloud sync, no analytics, no telemetry. All data stays on your device, and nothing is sent anywhere unless you explicitly turn on Google Calendar sync.
 
+## Changelog
+
+### v1.0.1
+- Fixed: Google Calendar export crashing with an UnimplementedError on Android
+- Fixed: notification permission is now requested proactively (onboarding + Settings toggle), instead of only appearing incidentally
+- Fixed: Calendar week header disambiguated (S M T W TH F SA); "First day of week" now consistently respected in Month view too (default changed to Sunday)
+- Fixed: time-blocked (scheduled) items now show up in Up Next, both in-app and in the widgets
+- Fixed: intermittent error opening the app from a home-screen widget tap
+- Changed: Up Next tab now shows the same header (date/greeting/XP bar/Find) as Today, instead of a plain title
+- Added: privacy policy (PRIVACY.md), noted Google Calendar's current test-user limitation in the README
+
+### v1.0.0
+- First build version of Cove
+
 ---
 
 <p align="center">more functionalities to appear later</p>
