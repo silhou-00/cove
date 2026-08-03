@@ -469,21 +469,39 @@ svg {
     transparent 12px
   );
   background-repeat: no-repeat;
-  background-size: 0% 100%;
+  /* Fully drawn by default — safe for anything that doesn't run the
+     page's JS (a crawler, a review tool, JS disabled). Only narrowed
+     to 0% once the synchronous head script confirms JS actually ran,
+     so the "draw in on scroll" effect is a progressive enhancement,
+     never a requirement for seeing the content. */
+  background-size: 100% 100%;
   transition: background-size 0.9s var(--ease);
+}
+
+.js .tide {
+  background-size: 0% 100%;
 }
 
 .tide.is-drawn {
   background-size: 100% 100%;
 }
 
-/* ---------- reveal-on-scroll (enter AND exit, both directions) ---------- */
+/* ---------- reveal-on-scroll (enter AND exit, both directions) ----------
+   Same progressive-enhancement rule as .tide above: visible by
+   default, only hidden-then-revealed when .js is present on <html>. A
+   page whose purpose/name a reviewer or crawler needs to read should
+   never depend on JavaScript having run first. */
 
 .reveal {
-  opacity: 0;
-  transform: translateY(1.1rem);
+  opacity: 1;
+  transform: none;
   transition: opacity 0.6s var(--ease), transform 0.6s var(--ease);
   will-change: opacity, transform;
+}
+
+.js .reveal {
+  opacity: 0;
+  transform: translateY(1.1rem);
 }
 
 .reveal.is-visible {
