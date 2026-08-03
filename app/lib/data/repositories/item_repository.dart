@@ -772,6 +772,69 @@ class ItemRepository {
     }
   }
 
+  /// Overdue anchor for [item] — the moment its whole window has passed:
+  /// a time block's own end if it has one, else its due date, else (a
+  /// scheduled item with no explicit end) its start. `null` if the item
+  /// has no date at all.
+  DateTime? _overdueAnchor(Item item) =>
+      item.scheduledEnd ?? item.dueAt ?? item.scheduledStart;
+
+  /// Overdue XP penalty (§17 addendum, on user request): scans open,
+  /// not-yet-recurring-template items and open occurrences whose overdue
+  /// anchor ([_overdueAnchor]) has passed and haven't been charged yet,
+  /// applies [XpRepository.applyOverduePenalty] once each, then flags
+  /// `overduePenaltyAppliedAt` so a later scan never double-charges the
+  /// same instance. Lazy/on-open like [extendRecurrenceHorizons], not a
+  /// background job — the exact moment doesn't matter, only that it's
+  /// caught the next time the app is actually opened.
+  Future<void> applyOverduePenalties({DateTime? now}) async {
+    final effectiveNow = now ?? DateTime.now();
+
+    final items =
+        await (_db.select(_db.items)..where(
+              (i) =>
+                  _isOpenItem(i) &
+                  i.recurrenceRule.isNull() &
+                  i.overduePenaltyAppliedAt.isNull(),
+            ))
+            .get();
+    for (final item in items) {
+      final anchor = _overdueAnchor(item);
+      if (anchor == null || !anchor.isBefore(effectiveNow)) continue;
+      await _xp.applyOverduePenalty(item.id, now: effectiveNow);
+      await (_db.update(_db.items)..where((i) => i.id.equals(item.id))).write(
+        ItemsCompanion(overduePenaltyAppliedAt: Value(effectiveNow)),
+      );
+    }
+
+    final occRows =
+        await (_db.select(_db.occurrences).join([
+              innerJoin(
+                _db.items,
+                _db.items.id.equalsExp(_db.occurrences.itemId),
+              ),
+            ])..where(
+              _isOpenItem(_db.items) &
+                  _db.occurrences.status.equalsValue(OccurrenceStatus.open) &
+                  _db.occurrences.overduePenaltyAppliedAt.isNull(),
+            ))
+            .get();
+    for (final row in occRows) {
+      final template = row.readTable(_db.items);
+      final occurrence = row.readTable(_db.occurrences);
+      final anchor = _overdueAnchor(
+        _effectiveItemForOccurrence(template, occurrence),
+      );
+      if (anchor == null || !anchor.isBefore(effectiveNow)) continue;
+      await _xp.applyOverduePenalty(template.id, now: effectiveNow);
+      await (_db.update(
+        _db.occurrences,
+      )..where((o) => o.id.equals(occurrence.id))).write(
+        OccurrencesCompanion(overduePenaltyAppliedAt: Value(effectiveNow)),
+      );
+    }
+  }
+
   /// Parses [text] with [parser] and resolves its `@area` token against
   /// [areas] (case-insensitive). Parsed `#tag` tokens are persisted via
   /// [TagRepository.setTagsForItem] (§4, "Tags, search, filters").
@@ -1066,10 +1129,14 @@ class ItemRepository {
   /// occurrence that currently holds the reminder advances it to the next
   /// one, and un-completing an earlier occurrence can bring the reminder
   /// back to it.
-  Future<void> toggleOccurrenceComplete(String occurrenceId) async {
+  Future<void> toggleOccurrenceComplete(
+    String occurrenceId, {
+    DateTime? now,
+  }) async {
     late _WidgetPayloads payloads;
     late Item item;
     late bool nowDone;
+    final effectiveNow = now ?? DateTime.now();
     await _db.transaction(() async {
       final occurrence = await (_db.select(
         _db.occurrences,
@@ -1082,7 +1149,7 @@ class ItemRepository {
           status: Value(
             nowDone ? OccurrenceStatus.done : OccurrenceStatus.open,
           ),
-          completedAt: Value(nowDone ? DateTime.now() : null),
+          completedAt: Value(nowDone ? effectiveNow : null),
         ),
       );
       item = await (_db.select(
@@ -1170,7 +1237,11 @@ class ItemRepository {
   /// Up Next (§6): open items with a due date or a time block, sorted
   /// ascending by effective date (`scheduledStart` if set, else `dueAt`).
   /// Recurring templates are excluded in favor of their materialized
-  /// `Occurrence` rows, same rule as the in-app read paths.
+  /// `Occurrence` rows, same rule as the in-app read paths — but only the
+  /// single soonest open occurrence per recurring item is included, not
+  /// every one of its ~60-day materialized instances. Without this, a
+  /// daily-recurring item would show up to 60 times over, making the
+  /// widget's list look far more cluttered/open than it actually is.
   Future<String> _refreshUpNextCache() async {
     final directQuery =
         _db.select(_db.items).join([
@@ -1193,6 +1264,21 @@ class ItemRepository {
         );
     final occRows = await occQuery.get();
 
+    final earliestOccPerItem = <String, TypedResult>{};
+    for (final row in occRows) {
+      final itemId = row.readTable(_db.items).id;
+      final occurrence = row.readTable(_db.occurrences);
+      final anchor = occurrence.scheduledStart ?? occurrence.date;
+      final existing = earliestOccPerItem[itemId];
+      final existingAnchor = existing == null
+          ? null
+          : (existing.readTable(_db.occurrences).scheduledStart ??
+                existing.readTable(_db.occurrences).date);
+      if (existingAnchor == null || anchor.isBefore(existingAnchor)) {
+        earliestOccPerItem[itemId] = row;
+      }
+    }
+
     final entries = [
       ...direct.map(
         (row) => (
@@ -1201,7 +1287,7 @@ class ItemRepository {
           occurrenceId: null as String?,
         ),
       ),
-      ...occRows.map(
+      ...earliestOccPerItem.values.map(
         (row) => (
           item: _effectiveItemForOccurrence(
             row.readTable(_db.items),

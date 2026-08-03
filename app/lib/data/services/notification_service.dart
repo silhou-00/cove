@@ -10,7 +10,16 @@ import '../db/tables.dart' show ItemStatus;
 import '../repositories/settings_repository.dart';
 
 const _permissionRequestedKey = 'notifications_permission_requested';
-const _notificationChannelId = 'reminders';
+
+// Channel ids were bumped from the original 'reminders' (§7 addendum, on
+// request: sound + a bigger style for time blocks) — Android notification
+// channels are immutable once created on a device, so changing importance/
+// sound/style settings in code has zero effect for anyone who already has
+// the old channel from a prior install. A fresh id is the only way these
+// settings actually take effect, for existing installs and new ones alike;
+// the old channel just goes unused, which is harmless.
+const _notificationChannelId = 'reminders_v2';
+const _timeBlockChannelId = 'reminders_v2_time_block';
 
 /// The anchor time a reminder fires relative to, minus the offset. Pure
 /// date math — kept separate from the plugin-calling methods below so it's
@@ -72,15 +81,28 @@ String _formatReminderBody({
     timePart = null;
   }
 
-  final trimmedNotes = notes?.trim();
-  final notesPart = (trimmedNotes == null || trimmedNotes.isEmpty)
-      ? null
-      : trimmedNotes.length > _notesPreviewMaxLength
-      ? '${trimmedNotes.substring(0, _notesPreviewMaxLength)}…'
-      : trimmedNotes;
-
-  final parts = [?timePart, ?notesPart];
+  final parts = [?timePart, ?_notesPreview(notes)];
   return parts.isEmpty ? 'Reminder' : parts.join(' · ');
+}
+
+/// Shared by [_formatReminderBody] and [momentBody] — truncates a notes
+/// preview to [_notesPreviewMaxLength], or `null` for blank/absent notes.
+String? _notesPreview(String? notes) {
+  final trimmed = notes?.trim();
+  if (trimmed == null || trimmed.isEmpty) return null;
+  return trimmed.length > _notesPreviewMaxLength
+      ? '${trimmed.substring(0, _notesPreviewMaxLength)}…'
+      : trimmed;
+}
+
+/// Body for a moment-of notification (§7 addendum, on request) — fires
+/// exactly at a time block's start/end or a deadline's due time itself,
+/// rather than some lead time before it like [reminderBody]. Public, not
+/// private, same reasoning as every other pure body-builder here: kept
+/// unit-testable without a platform channel.
+String momentBody(String label, String? notes) {
+  final notesPart = _notesPreview(notes);
+  return notesPart == null ? label : '$label · $notesPart';
 }
 
 String reminderBody(Item item) => _formatReminderBody(
@@ -246,6 +268,64 @@ class NotificationService {
       idealFireAt: idealFireAt,
       payload: item.id,
     );
+    await _scheduleMomentNotifications(
+      key: item.id,
+      title: item.shortTitle ?? item.title,
+      notes: item.notes,
+      scheduledStart: item.scheduledStart,
+      scheduledEnd: item.scheduledEnd,
+      dueAt: item.dueAt,
+      payload: item.id,
+    );
+  }
+
+  /// Start/end/due-now notifications (§7 addendum, on request) — fire
+  /// exactly at the moment itself, on top of (not instead of) the
+  /// existing lead-time reminder above. A time block gets one at its
+  /// start and, if it has one, its end; a due-only item gets one at its
+  /// due time. Time-block moments use the bigger/louder
+  /// [_timeBlockChannelId] channel; the due-now moment uses the same
+  /// plain channel as the lead-time reminder.
+  Future<void> _scheduleMomentNotifications({
+    required String key,
+    required String title,
+    required String? notes,
+    required DateTime? scheduledStart,
+    required DateTime? scheduledEnd,
+    required DateTime? dueAt,
+    required String payload,
+  }) async {
+    if (scheduledStart != null) {
+      await _scheduleCore(
+        notificationId: notificationIdFor('$key#start'),
+        title: title,
+        body: momentBody('Started', notes),
+        anchor: scheduledStart,
+        idealFireAt: scheduledStart,
+        payload: payload,
+        timeBlockStyle: true,
+      );
+      if (scheduledEnd != null) {
+        await _scheduleCore(
+          notificationId: notificationIdFor('$key#end'),
+          title: title,
+          body: momentBody('Ended', notes),
+          anchor: scheduledEnd,
+          idealFireAt: scheduledEnd,
+          payload: payload,
+          timeBlockStyle: true,
+        );
+      }
+    } else if (dueAt != null) {
+      await _scheduleCore(
+        notificationId: notificationIdFor('$key#due'),
+        title: title,
+        body: momentBody('Due now', notes),
+        anchor: dueAt,
+        idealFireAt: dueAt,
+        payload: payload,
+      );
+    }
   }
 
   /// Schedules (or reschedules) a reminder for one materialized
@@ -275,8 +355,34 @@ class NotificationService {
       idealFireAt: idealFireAt,
       payload: item.id,
     );
+
+    // Occurrence rows have no `scheduledEnd` column of their own — a
+    // scheduled-kind occurrence's duration is inherited from the
+    // template's `scheduledEnd - scheduledStart` delta, same derivation
+    // `ItemRepository._effectiveItemForOccurrence` already uses.
+    final duration =
+        (item.scheduledStart != null && item.scheduledEnd != null)
+        ? item.scheduledEnd!.difference(item.scheduledStart!)
+        : null;
+    await _scheduleMomentNotifications(
+      key: occurrence.id,
+      title: item.shortTitle ?? item.title,
+      notes: item.notes,
+      scheduledStart: occurrence.scheduledStart,
+      scheduledEnd: (occurrence.scheduledStart != null && duration != null)
+          ? occurrence.scheduledStart!.add(duration)
+          : null,
+      dueAt: occurrence.scheduledStart == null ? occurrence.date : null,
+      payload: item.id,
+    );
   }
 
+  /// [timeBlockStyle] (§7 addendum, on request: "just like events in
+  /// Google Calendar the notification should be bigger") routes to the
+  /// louder/taller [_timeBlockChannelId] channel with `Importance.high`
+  /// (heads-up display) and an expanded [BigTextStyleInformation] body,
+  /// instead of the plain default-importance channel every other
+  /// reminder here uses.
   Future<void> _scheduleCore({
     required int notificationId,
     required String title,
@@ -284,6 +390,7 @@ class NotificationService {
     required DateTime anchor,
     required DateTime idealFireAt,
     required String payload,
+    bool timeBlockStyle = false,
   }) async {
     await _ensureInitialized();
     await _ensurePermission();
@@ -302,20 +409,34 @@ class NotificationService {
     );
     if (fireAt == null) return;
 
+    final androidDetails = timeBlockStyle
+        ? AndroidNotificationDetails(
+            _timeBlockChannelId,
+            'Time blocks',
+            channelDescription: 'Start/end alerts for scheduled time blocks',
+            icon: 'ic_notification',
+            importance: Importance.high,
+            priority: Priority.high,
+            playSound: true,
+            enableVibration: true,
+            styleInformation: BigTextStyleInformation(body),
+          )
+        : AndroidNotificationDetails(
+            _notificationChannelId,
+            'Reminders',
+            channelDescription: 'Reminders for scheduled and due items',
+            icon: 'ic_notification',
+            playSound: true,
+            enableVibration: true,
+          );
+
     try {
       await _plugin.zonedSchedule(
         notificationId,
         title,
         body,
         tz.TZDateTime.from(fireAt, tz.local),
-        const NotificationDetails(
-          android: AndroidNotificationDetails(
-            _notificationChannelId,
-            'Reminders',
-            channelDescription: 'Reminders for scheduled and due items',
-            icon: 'ic_notification',
-          ),
-        ),
+        NotificationDetails(android: androidDetails),
         androidScheduleMode: exact
             ? AndroidScheduleMode.exactAllowWhileIdle
             : AndroidScheduleMode.inexactAllowWhileIdle,
@@ -328,10 +449,26 @@ class NotificationService {
     }
   }
 
+  /// The lead-time reminder plus every moment notification
+  /// ([_scheduleMomentNotifications]) share this same key prefix, so a
+  /// single cancel call clears all of them — needed since
+  /// [scheduleForItem]/[scheduleForOccurrence] always cancel-then-
+  /// reschedule from scratch, and which of start/end/due actually apply
+  /// can change between calls (e.g. an item edited from a time block to
+  /// a plain deadline).
+  List<int> _notificationIdsFor(String key) => [
+    notificationIdFor(key),
+    notificationIdFor('$key#start'),
+    notificationIdFor('$key#end'),
+    notificationIdFor('$key#due'),
+  ];
+
   Future<void> cancelForItem(String itemId) async {
     await _ensureInitialized();
     try {
-      await _plugin.cancel(notificationIdFor(itemId));
+      for (final id in _notificationIdsFor(itemId)) {
+        await _plugin.cancel(id);
+      }
     } catch (_) {
       // No platform channel available.
     }
@@ -340,7 +477,9 @@ class NotificationService {
   Future<void> cancelForOccurrence(String occurrenceId) async {
     await _ensureInitialized();
     try {
-      await _plugin.cancel(notificationIdFor(occurrenceId));
+      for (final id in _notificationIdsFor(occurrenceId)) {
+        await _plugin.cancel(id);
+      }
     } catch (_) {
       // No platform channel available.
     }

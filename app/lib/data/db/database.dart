@@ -37,7 +37,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -89,6 +89,22 @@ class AppDatabase extends _$AppDatabase {
       // column to exist.
       if (from < 7) {
         await m.addColumn(profiles, profiles.avatarPath);
+      }
+      // v7 -> v8: overdue XP penalty (§17 addendum) — a one-off flag per
+      // item/occurrence so `ItemRepository.applyOverduePenalties` never
+      // re-charges the same instance on a later scan. Off (null) for
+      // every existing row; nothing to backfill.
+      if (from < 8) {
+        await m.addColumn(items, items.overduePenaltyAppliedAt);
+        await m.addColumn(occurrences, occurrences.overduePenaltyAppliedAt);
+      }
+      // v8 -> v9: deadline/time-block categorization for imported Google
+      // Calendar events (§9 addendum, on user request). Existing rows
+      // default to `false` (time-block-like); the next "Sync now" fully
+      // replaces every row anyway (`applyEvents` clears the table first),
+      // so nothing meaningful is actually lost by that default.
+      if (from < 9) {
+        await m.addColumn(externalEvents, externalEvents.isAllDay);
       }
     },
   );

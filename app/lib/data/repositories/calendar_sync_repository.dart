@@ -197,6 +197,9 @@ class CalendarSyncRepository {
                 start: start,
                 end: Value(event.end?.dateTime ?? event.end?.date),
                 lastSyncedAt: now,
+                // A Google event with only a `date` (no `dateTime`) is
+                // all-day — deadline-like, not a specific time block.
+                isAllDay: Value(event.start?.dateTime == null),
               ),
             );
       }

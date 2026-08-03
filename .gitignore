@@ -54,3 +54,4 @@ app/**/app.*.map.json
 
 blueprint-out
 documents
+web/frontend.md

@@ -82,6 +82,31 @@ class XpRepository {
     await (_db.delete(_db.xpLogs)..where((x) => x.id.equals(rows.first.id))).go();
   }
 
+  /// Overdue penalty (§17 addendum, on user request) — a deliberate
+  /// exception to the ledger's otherwise positive-only history. Fires
+  /// once per item/occurrence (see `ItemRepository.applyOverduePenalties`,
+  /// the only caller, which tracks that via `overduePenaltyAppliedAt`).
+  /// Logged as a negative `XpLogs` row rather than a direct subtract, so
+  /// `totalXp` stays a pure derived sum — same ledger model as every
+  /// other XP change, delevel included if the cut crosses a threshold.
+  /// [Gamification.overduePenalty] floors the deduction at whatever's
+  /// actually banked, so this can never drive the total negative.
+  Future<void> applyOverduePenalty(String itemId, {DateTime? now}) async {
+    final current = await totalXp();
+    final penalty = Gamification.overduePenalty(current);
+    if (penalty <= 0) return;
+    await _db
+        .into(_db.xpLogs)
+        .insert(
+          XpLogsCompanion.insert(
+            id: _uuid.v4(),
+            itemId: itemId,
+            xpAwarded: -penalty,
+            awardedAt: now ?? DateTime.now(),
+          ),
+        );
+  }
+
   Future<int> totalXp() async {
     final rows = await _db.select(_db.xpLogs).get();
     return rows.fold<int>(0, (sum, row) => sum + row.xpAwarded);

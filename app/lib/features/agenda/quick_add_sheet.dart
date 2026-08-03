@@ -6,6 +6,7 @@ import '../../app/theme.dart';
 import '../../data/db/database.dart' show Area, Item;
 import '../../domain/services/quick_add_parser.dart';
 import '../item/widgets/date_time_pickers.dart';
+import '../item/widgets/reminder_offset_picker.dart';
 
 DateTime _startOfDay(DateTime d) => DateTime(d.year, d.month, d.day);
 
@@ -111,16 +112,6 @@ class _QuickAddSheetState extends ConsumerState<QuickAddSheet> {
   int _reminderOffsetMinutes = 60;
   bool _dateTouchedManually = false;
   String? _timeError;
-
-  static const _reminderOffsetOptions = [60, 300, 1440, -1];
-
-  static String _reminderOffsetLabel(int minutes) => switch (minutes) {
-    -1 => 'OFF',
-    60 => '1 HOUR',
-    300 => '5 HOURS',
-    1440 => '1 DAY',
-    final m => '$m MIN',
-  };
 
   @override
   void initState() {
@@ -619,19 +610,10 @@ class _QuickAddSheetState extends ConsumerState<QuickAddSheet> {
                       ).copyWith(letterSpacing: context.s(1.4)),
                     ),
                     SizedBox(height: context.s(6)),
-                    Wrap(
-                      spacing: context.s(6),
-                      runSpacing: context.s(6),
-                      children: [
-                        for (final option in _reminderOffsetOptions)
-                          RepeatChip(
-                            label: _reminderOffsetLabel(option),
-                            active: _reminderOffsetMinutes == option,
-                            onTap: () => setState(
-                              () => _reminderOffsetMinutes = option,
-                            ),
-                          ),
-                      ],
+                    ReminderOffsetPicker(
+                      minutes: _reminderOffsetMinutes,
+                      onChanged: (value) =>
+                          setState(() => _reminderOffsetMinutes = value),
                     ),
                     SizedBox(height: context.s(14)),
                     Text(

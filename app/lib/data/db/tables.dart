@@ -87,6 +87,13 @@ class Items extends Table {
   IntColumn get reminderOffsetMinutes =>
       integer().withDefault(const Constant(60))();
 
+  /// Set the first (and only) time the overdue XP penalty
+  /// (`XpRepository.applyOverduePenalty`) is applied for this item — a
+  /// deliberate one-off exception to the otherwise positive-only XP
+  /// design. Prevents `ItemRepository.applyOverduePenalties` from
+  /// re-charging the same item on every later scan.
+  DateTimeColumn get overduePenaltyAppliedAt => dateTime().nullable()();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -99,6 +106,11 @@ class Occurrences extends Table {
   DateTimeColumn get scheduledStart => dateTime().nullable()();
   late final status = textEnum<OccurrenceStatus>()();
   DateTimeColumn get completedAt => dateTime().nullable()();
+
+  /// Same one-off penalty flag as `Items.overduePenaltyAppliedAt`, tracked
+  /// per-occurrence since a recurring item's instances go overdue
+  /// independently of each other.
+  DateTimeColumn get overduePenaltyAppliedAt => dateTime().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -166,6 +178,12 @@ class ExternalEvents extends Table {
   DateTimeColumn get start => dateTime()();
   DateTimeColumn get end => dateTime().nullable()();
   DateTimeColumn get lastSyncedAt => dateTime()();
+
+  /// True for a Google event with only a `date` (no `dateTime`) — an
+  /// all-day event, treated as deadline-like (shown in Today/Up Next)
+  /// rather than time-block-like (shown in Time Block), mirroring how
+  /// Cove's own items split between `dueAt` and `scheduledStart`.
+  BoolColumn get isAllDay => boolean().withDefault(const Constant(false))();
 
   @override
   Set<Column> get primaryKey => {id};

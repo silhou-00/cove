@@ -46,4 +46,16 @@ void main() {
       expect(Gamification.levelForXp(1000000), Gamification.maxLevel);
     });
   });
+
+  group('Gamification.overduePenalty (§17 addendum)', () {
+    test('is the configured rate of current XP, rounded', () {
+      expect(Gamification.overduePenalty(1000), 25);
+      expect(Gamification.overduePenalty(101), 3);
+    });
+
+    test('floors at the current XP itself, never exceeding it', () {
+      expect(Gamification.overduePenalty(1), lessThanOrEqualTo(1));
+      expect(Gamification.overduePenalty(0), 0);
+    });
+  });
 }

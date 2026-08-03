@@ -1172,6 +1172,17 @@ class $ItemsTable extends Items with TableInfo<$ItemsTable, Item> {
     requiredDuringInsert: false,
     defaultValue: const Constant(60),
   );
+  static const VerificationMeta _overduePenaltyAppliedAtMeta =
+      const VerificationMeta('overduePenaltyAppliedAt');
+  @override
+  late final GeneratedColumn<DateTime> overduePenaltyAppliedAt =
+      GeneratedColumn<DateTime>(
+        'overdue_penalty_applied_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1194,6 +1205,7 @@ class $ItemsTable extends Items with TableInfo<$ItemsTable, Item> {
     archivedAt,
     sortOrder,
     reminderOffsetMinutes,
+    overduePenaltyAppliedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1341,6 +1353,15 @@ class $ItemsTable extends Items with TableInfo<$ItemsTable, Item> {
         ),
       );
     }
+    if (data.containsKey('overdue_penalty_applied_at')) {
+      context.handle(
+        _overduePenaltyAppliedAtMeta,
+        overduePenaltyAppliedAt.isAcceptableOrUnknown(
+          data['overdue_penalty_applied_at']!,
+          _overduePenaltyAppliedAtMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -1434,6 +1455,10 @@ class $ItemsTable extends Items with TableInfo<$ItemsTable, Item> {
         DriftSqlType.int,
         data['${effectivePrefix}reminder_offset_minutes'],
       )!,
+      overduePenaltyAppliedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}overdue_penalty_applied_at'],
+      ),
     );
   }
 
@@ -1485,6 +1510,13 @@ class Item extends DataClass implements Insertable<Item> {
   /// existing rows keep firing reminders the same way they did under the
   /// old global-default behavior after the migration backfills them.
   final int reminderOffsetMinutes;
+
+  /// Set the first (and only) time the overdue XP penalty
+  /// (`XpRepository.applyOverduePenalty`) is applied for this item — a
+  /// deliberate one-off exception to the otherwise positive-only XP
+  /// design. Prevents `ItemRepository.applyOverduePenalties` from
+  /// re-charging the same item on every later scan.
+  final DateTime? overduePenaltyAppliedAt;
   const Item({
     required this.id,
     this.areaId,
@@ -1506,6 +1538,7 @@ class Item extends DataClass implements Insertable<Item> {
     this.archivedAt,
     required this.sortOrder,
     required this.reminderOffsetMinutes,
+    this.overduePenaltyAppliedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1564,6 +1597,11 @@ class Item extends DataClass implements Insertable<Item> {
     }
     map['sort_order'] = Variable<int>(sortOrder);
     map['reminder_offset_minutes'] = Variable<int>(reminderOffsetMinutes);
+    if (!nullToAbsent || overduePenaltyAppliedAt != null) {
+      map['overdue_penalty_applied_at'] = Variable<DateTime>(
+        overduePenaltyAppliedAt,
+      );
+    }
     return map;
   }
 
@@ -1615,6 +1653,9 @@ class Item extends DataClass implements Insertable<Item> {
           : Value(archivedAt),
       sortOrder: Value(sortOrder),
       reminderOffsetMinutes: Value(reminderOffsetMinutes),
+      overduePenaltyAppliedAt: overduePenaltyAppliedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(overduePenaltyAppliedAt),
     );
   }
 
@@ -1652,6 +1693,9 @@ class Item extends DataClass implements Insertable<Item> {
       reminderOffsetMinutes: serializer.fromJson<int>(
         json['reminderOffsetMinutes'],
       ),
+      overduePenaltyAppliedAt: serializer.fromJson<DateTime?>(
+        json['overduePenaltyAppliedAt'],
+      ),
     );
   }
   @override
@@ -1684,6 +1728,9 @@ class Item extends DataClass implements Insertable<Item> {
       'archivedAt': serializer.toJson<DateTime?>(archivedAt),
       'sortOrder': serializer.toJson<int>(sortOrder),
       'reminderOffsetMinutes': serializer.toJson<int>(reminderOffsetMinutes),
+      'overduePenaltyAppliedAt': serializer.toJson<DateTime?>(
+        overduePenaltyAppliedAt,
+      ),
     };
   }
 
@@ -1708,6 +1755,7 @@ class Item extends DataClass implements Insertable<Item> {
     Value<DateTime?> archivedAt = const Value.absent(),
     int? sortOrder,
     int? reminderOffsetMinutes,
+    Value<DateTime?> overduePenaltyAppliedAt = const Value.absent(),
   }) => Item(
     id: id ?? this.id,
     areaId: areaId.present ? areaId.value : this.areaId,
@@ -1737,6 +1785,9 @@ class Item extends DataClass implements Insertable<Item> {
     archivedAt: archivedAt.present ? archivedAt.value : this.archivedAt,
     sortOrder: sortOrder ?? this.sortOrder,
     reminderOffsetMinutes: reminderOffsetMinutes ?? this.reminderOffsetMinutes,
+    overduePenaltyAppliedAt: overduePenaltyAppliedAt.present
+        ? overduePenaltyAppliedAt.value
+        : this.overduePenaltyAppliedAt,
   );
   Item copyWithCompanion(ItemsCompanion data) {
     return Item(
@@ -1778,6 +1829,9 @@ class Item extends DataClass implements Insertable<Item> {
       reminderOffsetMinutes: data.reminderOffsetMinutes.present
           ? data.reminderOffsetMinutes.value
           : this.reminderOffsetMinutes,
+      overduePenaltyAppliedAt: data.overduePenaltyAppliedAt.present
+          ? data.overduePenaltyAppliedAt.value
+          : this.overduePenaltyAppliedAt,
     );
   }
 
@@ -1803,13 +1857,14 @@ class Item extends DataClass implements Insertable<Item> {
           ..write('updatedAt: $updatedAt, ')
           ..write('archivedAt: $archivedAt, ')
           ..write('sortOrder: $sortOrder, ')
-          ..write('reminderOffsetMinutes: $reminderOffsetMinutes')
+          ..write('reminderOffsetMinutes: $reminderOffsetMinutes, ')
+          ..write('overduePenaltyAppliedAt: $overduePenaltyAppliedAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     id,
     areaId,
     parentId,
@@ -1830,7 +1885,8 @@ class Item extends DataClass implements Insertable<Item> {
     archivedAt,
     sortOrder,
     reminderOffsetMinutes,
-  );
+    overduePenaltyAppliedAt,
+  ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1854,7 +1910,8 @@ class Item extends DataClass implements Insertable<Item> {
           other.updatedAt == this.updatedAt &&
           other.archivedAt == this.archivedAt &&
           other.sortOrder == this.sortOrder &&
-          other.reminderOffsetMinutes == this.reminderOffsetMinutes);
+          other.reminderOffsetMinutes == this.reminderOffsetMinutes &&
+          other.overduePenaltyAppliedAt == this.overduePenaltyAppliedAt);
 }
 
 class ItemsCompanion extends UpdateCompanion<Item> {
@@ -1878,6 +1935,7 @@ class ItemsCompanion extends UpdateCompanion<Item> {
   final Value<DateTime?> archivedAt;
   final Value<int> sortOrder;
   final Value<int> reminderOffsetMinutes;
+  final Value<DateTime?> overduePenaltyAppliedAt;
   final Value<int> rowid;
   const ItemsCompanion({
     this.id = const Value.absent(),
@@ -1900,6 +1958,7 @@ class ItemsCompanion extends UpdateCompanion<Item> {
     this.archivedAt = const Value.absent(),
     this.sortOrder = const Value.absent(),
     this.reminderOffsetMinutes = const Value.absent(),
+    this.overduePenaltyAppliedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   ItemsCompanion.insert({
@@ -1923,6 +1982,7 @@ class ItemsCompanion extends UpdateCompanion<Item> {
     this.archivedAt = const Value.absent(),
     this.sortOrder = const Value.absent(),
     this.reminderOffsetMinutes = const Value.absent(),
+    this.overduePenaltyAppliedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        title = Value(title),
@@ -1950,6 +2010,7 @@ class ItemsCompanion extends UpdateCompanion<Item> {
     Expression<DateTime>? archivedAt,
     Expression<int>? sortOrder,
     Expression<int>? reminderOffsetMinutes,
+    Expression<DateTime>? overduePenaltyAppliedAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -1975,6 +2036,8 @@ class ItemsCompanion extends UpdateCompanion<Item> {
       if (sortOrder != null) 'sort_order': sortOrder,
       if (reminderOffsetMinutes != null)
         'reminder_offset_minutes': reminderOffsetMinutes,
+      if (overduePenaltyAppliedAt != null)
+        'overdue_penalty_applied_at': overduePenaltyAppliedAt,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -2000,6 +2063,7 @@ class ItemsCompanion extends UpdateCompanion<Item> {
     Value<DateTime?>? archivedAt,
     Value<int>? sortOrder,
     Value<int>? reminderOffsetMinutes,
+    Value<DateTime?>? overduePenaltyAppliedAt,
     Value<int>? rowid,
   }) {
     return ItemsCompanion(
@@ -2025,6 +2089,8 @@ class ItemsCompanion extends UpdateCompanion<Item> {
       sortOrder: sortOrder ?? this.sortOrder,
       reminderOffsetMinutes:
           reminderOffsetMinutes ?? this.reminderOffsetMinutes,
+      overduePenaltyAppliedAt:
+          overduePenaltyAppliedAt ?? this.overduePenaltyAppliedAt,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -2100,6 +2166,11 @@ class ItemsCompanion extends UpdateCompanion<Item> {
         reminderOffsetMinutes.value,
       );
     }
+    if (overduePenaltyAppliedAt.present) {
+      map['overdue_penalty_applied_at'] = Variable<DateTime>(
+        overduePenaltyAppliedAt.value,
+      );
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -2129,6 +2200,7 @@ class ItemsCompanion extends UpdateCompanion<Item> {
           ..write('archivedAt: $archivedAt, ')
           ..write('sortOrder: $sortOrder, ')
           ..write('reminderOffsetMinutes: $reminderOffsetMinutes, ')
+          ..write('overduePenaltyAppliedAt: $overduePenaltyAppliedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -2203,6 +2275,17 @@ class $OccurrencesTable extends Occurrences
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _overduePenaltyAppliedAtMeta =
+      const VerificationMeta('overduePenaltyAppliedAt');
+  @override
+  late final GeneratedColumn<DateTime> overduePenaltyAppliedAt =
+      GeneratedColumn<DateTime>(
+        'overdue_penalty_applied_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -2211,6 +2294,7 @@ class $OccurrencesTable extends Occurrences
     scheduledStart,
     status,
     completedAt,
+    overduePenaltyAppliedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2263,6 +2347,15 @@ class $OccurrencesTable extends Occurrences
         ),
       );
     }
+    if (data.containsKey('overdue_penalty_applied_at')) {
+      context.handle(
+        _overduePenaltyAppliedAtMeta,
+        overduePenaltyAppliedAt.isAcceptableOrUnknown(
+          data['overdue_penalty_applied_at']!,
+          _overduePenaltyAppliedAtMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -2298,6 +2391,10 @@ class $OccurrencesTable extends Occurrences
         DriftSqlType.dateTime,
         data['${effectivePrefix}completed_at'],
       ),
+      overduePenaltyAppliedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}overdue_penalty_applied_at'],
+      ),
     );
   }
 
@@ -2317,6 +2414,11 @@ class Occurrence extends DataClass implements Insertable<Occurrence> {
   final DateTime? scheduledStart;
   final OccurrenceStatus status;
   final DateTime? completedAt;
+
+  /// Same one-off penalty flag as `Items.overduePenaltyAppliedAt`, tracked
+  /// per-occurrence since a recurring item's instances go overdue
+  /// independently of each other.
+  final DateTime? overduePenaltyAppliedAt;
   const Occurrence({
     required this.id,
     required this.itemId,
@@ -2324,6 +2426,7 @@ class Occurrence extends DataClass implements Insertable<Occurrence> {
     this.scheduledStart,
     required this.status,
     this.completedAt,
+    this.overduePenaltyAppliedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2342,6 +2445,11 @@ class Occurrence extends DataClass implements Insertable<Occurrence> {
     if (!nullToAbsent || completedAt != null) {
       map['completed_at'] = Variable<DateTime>(completedAt);
     }
+    if (!nullToAbsent || overduePenaltyAppliedAt != null) {
+      map['overdue_penalty_applied_at'] = Variable<DateTime>(
+        overduePenaltyAppliedAt,
+      );
+    }
     return map;
   }
 
@@ -2357,6 +2465,9 @@ class Occurrence extends DataClass implements Insertable<Occurrence> {
       completedAt: completedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(completedAt),
+      overduePenaltyAppliedAt: overduePenaltyAppliedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(overduePenaltyAppliedAt),
     );
   }
 
@@ -2374,6 +2485,9 @@ class Occurrence extends DataClass implements Insertable<Occurrence> {
         serializer.fromJson<String>(json['status']),
       ),
       completedAt: serializer.fromJson<DateTime?>(json['completedAt']),
+      overduePenaltyAppliedAt: serializer.fromJson<DateTime?>(
+        json['overduePenaltyAppliedAt'],
+      ),
     );
   }
   @override
@@ -2388,6 +2502,9 @@ class Occurrence extends DataClass implements Insertable<Occurrence> {
         $OccurrencesTable.$converterstatus.toJson(status),
       ),
       'completedAt': serializer.toJson<DateTime?>(completedAt),
+      'overduePenaltyAppliedAt': serializer.toJson<DateTime?>(
+        overduePenaltyAppliedAt,
+      ),
     };
   }
 
@@ -2398,6 +2515,7 @@ class Occurrence extends DataClass implements Insertable<Occurrence> {
     Value<DateTime?> scheduledStart = const Value.absent(),
     OccurrenceStatus? status,
     Value<DateTime?> completedAt = const Value.absent(),
+    Value<DateTime?> overduePenaltyAppliedAt = const Value.absent(),
   }) => Occurrence(
     id: id ?? this.id,
     itemId: itemId ?? this.itemId,
@@ -2407,6 +2525,9 @@ class Occurrence extends DataClass implements Insertable<Occurrence> {
         : this.scheduledStart,
     status: status ?? this.status,
     completedAt: completedAt.present ? completedAt.value : this.completedAt,
+    overduePenaltyAppliedAt: overduePenaltyAppliedAt.present
+        ? overduePenaltyAppliedAt.value
+        : this.overduePenaltyAppliedAt,
   );
   Occurrence copyWithCompanion(OccurrencesCompanion data) {
     return Occurrence(
@@ -2420,6 +2541,9 @@ class Occurrence extends DataClass implements Insertable<Occurrence> {
       completedAt: data.completedAt.present
           ? data.completedAt.value
           : this.completedAt,
+      overduePenaltyAppliedAt: data.overduePenaltyAppliedAt.present
+          ? data.overduePenaltyAppliedAt.value
+          : this.overduePenaltyAppliedAt,
     );
   }
 
@@ -2431,14 +2555,22 @@ class Occurrence extends DataClass implements Insertable<Occurrence> {
           ..write('date: $date, ')
           ..write('scheduledStart: $scheduledStart, ')
           ..write('status: $status, ')
-          ..write('completedAt: $completedAt')
+          ..write('completedAt: $completedAt, ')
+          ..write('overduePenaltyAppliedAt: $overduePenaltyAppliedAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, itemId, date, scheduledStart, status, completedAt);
+  int get hashCode => Object.hash(
+    id,
+    itemId,
+    date,
+    scheduledStart,
+    status,
+    completedAt,
+    overduePenaltyAppliedAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2448,7 +2580,8 @@ class Occurrence extends DataClass implements Insertable<Occurrence> {
           other.date == this.date &&
           other.scheduledStart == this.scheduledStart &&
           other.status == this.status &&
-          other.completedAt == this.completedAt);
+          other.completedAt == this.completedAt &&
+          other.overduePenaltyAppliedAt == this.overduePenaltyAppliedAt);
 }
 
 class OccurrencesCompanion extends UpdateCompanion<Occurrence> {
@@ -2458,6 +2591,7 @@ class OccurrencesCompanion extends UpdateCompanion<Occurrence> {
   final Value<DateTime?> scheduledStart;
   final Value<OccurrenceStatus> status;
   final Value<DateTime?> completedAt;
+  final Value<DateTime?> overduePenaltyAppliedAt;
   final Value<int> rowid;
   const OccurrencesCompanion({
     this.id = const Value.absent(),
@@ -2466,6 +2600,7 @@ class OccurrencesCompanion extends UpdateCompanion<Occurrence> {
     this.scheduledStart = const Value.absent(),
     this.status = const Value.absent(),
     this.completedAt = const Value.absent(),
+    this.overduePenaltyAppliedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   OccurrencesCompanion.insert({
@@ -2475,6 +2610,7 @@ class OccurrencesCompanion extends UpdateCompanion<Occurrence> {
     this.scheduledStart = const Value.absent(),
     required OccurrenceStatus status,
     this.completedAt = const Value.absent(),
+    this.overduePenaltyAppliedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        itemId = Value(itemId),
@@ -2487,6 +2623,7 @@ class OccurrencesCompanion extends UpdateCompanion<Occurrence> {
     Expression<DateTime>? scheduledStart,
     Expression<String>? status,
     Expression<DateTime>? completedAt,
+    Expression<DateTime>? overduePenaltyAppliedAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -2496,6 +2633,8 @@ class OccurrencesCompanion extends UpdateCompanion<Occurrence> {
       if (scheduledStart != null) 'scheduled_start': scheduledStart,
       if (status != null) 'status': status,
       if (completedAt != null) 'completed_at': completedAt,
+      if (overduePenaltyAppliedAt != null)
+        'overdue_penalty_applied_at': overduePenaltyAppliedAt,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -2507,6 +2646,7 @@ class OccurrencesCompanion extends UpdateCompanion<Occurrence> {
     Value<DateTime?>? scheduledStart,
     Value<OccurrenceStatus>? status,
     Value<DateTime?>? completedAt,
+    Value<DateTime?>? overduePenaltyAppliedAt,
     Value<int>? rowid,
   }) {
     return OccurrencesCompanion(
@@ -2516,6 +2656,8 @@ class OccurrencesCompanion extends UpdateCompanion<Occurrence> {
       scheduledStart: scheduledStart ?? this.scheduledStart,
       status: status ?? this.status,
       completedAt: completedAt ?? this.completedAt,
+      overduePenaltyAppliedAt:
+          overduePenaltyAppliedAt ?? this.overduePenaltyAppliedAt,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -2543,6 +2685,11 @@ class OccurrencesCompanion extends UpdateCompanion<Occurrence> {
     if (completedAt.present) {
       map['completed_at'] = Variable<DateTime>(completedAt.value);
     }
+    if (overduePenaltyAppliedAt.present) {
+      map['overdue_penalty_applied_at'] = Variable<DateTime>(
+        overduePenaltyAppliedAt.value,
+      );
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -2558,6 +2705,7 @@ class OccurrencesCompanion extends UpdateCompanion<Occurrence> {
           ..write('scheduledStart: $scheduledStart, ')
           ..write('status: $status, ')
           ..write('completedAt: $completedAt, ')
+          ..write('overduePenaltyAppliedAt: $overduePenaltyAppliedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -3055,6 +3203,21 @@ class $ExternalEventsTable extends ExternalEvents
     type: DriftSqlType.dateTime,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _isAllDayMeta = const VerificationMeta(
+    'isAllDay',
+  );
+  @override
+  late final GeneratedColumn<bool> isAllDay = GeneratedColumn<bool>(
+    'is_all_day',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_all_day" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -3064,6 +3227,7 @@ class $ExternalEventsTable extends ExternalEvents
     start,
     end,
     lastSyncedAt,
+    isAllDay,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -3134,6 +3298,12 @@ class $ExternalEventsTable extends ExternalEvents
     } else if (isInserting) {
       context.missing(_lastSyncedAtMeta);
     }
+    if (data.containsKey('is_all_day')) {
+      context.handle(
+        _isAllDayMeta,
+        isAllDay.isAcceptableOrUnknown(data['is_all_day']!, _isAllDayMeta),
+      );
+    }
     return context;
   }
 
@@ -3171,6 +3341,10 @@ class $ExternalEventsTable extends ExternalEvents
         DriftSqlType.dateTime,
         data['${effectivePrefix}last_synced_at'],
       )!,
+      isAllDay: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_all_day'],
+      )!,
     );
   }
 
@@ -3188,6 +3362,12 @@ class ExternalEvent extends DataClass implements Insertable<ExternalEvent> {
   final DateTime start;
   final DateTime? end;
   final DateTime lastSyncedAt;
+
+  /// True for a Google event with only a `date` (no `dateTime`) — an
+  /// all-day event, treated as deadline-like (shown in Today/Up Next)
+  /// rather than time-block-like (shown in Time Block), mirroring how
+  /// Cove's own items split between `dueAt` and `scheduledStart`.
+  final bool isAllDay;
   const ExternalEvent({
     required this.id,
     required this.googleEventId,
@@ -3196,6 +3376,7 @@ class ExternalEvent extends DataClass implements Insertable<ExternalEvent> {
     required this.start,
     this.end,
     required this.lastSyncedAt,
+    required this.isAllDay,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -3209,6 +3390,7 @@ class ExternalEvent extends DataClass implements Insertable<ExternalEvent> {
       map['end'] = Variable<DateTime>(end);
     }
     map['last_synced_at'] = Variable<DateTime>(lastSyncedAt);
+    map['is_all_day'] = Variable<bool>(isAllDay);
     return map;
   }
 
@@ -3221,6 +3403,7 @@ class ExternalEvent extends DataClass implements Insertable<ExternalEvent> {
       start: Value(start),
       end: end == null && nullToAbsent ? const Value.absent() : Value(end),
       lastSyncedAt: Value(lastSyncedAt),
+      isAllDay: Value(isAllDay),
     );
   }
 
@@ -3237,6 +3420,7 @@ class ExternalEvent extends DataClass implements Insertable<ExternalEvent> {
       start: serializer.fromJson<DateTime>(json['start']),
       end: serializer.fromJson<DateTime?>(json['end']),
       lastSyncedAt: serializer.fromJson<DateTime>(json['lastSyncedAt']),
+      isAllDay: serializer.fromJson<bool>(json['isAllDay']),
     );
   }
   @override
@@ -3250,6 +3434,7 @@ class ExternalEvent extends DataClass implements Insertable<ExternalEvent> {
       'start': serializer.toJson<DateTime>(start),
       'end': serializer.toJson<DateTime?>(end),
       'lastSyncedAt': serializer.toJson<DateTime>(lastSyncedAt),
+      'isAllDay': serializer.toJson<bool>(isAllDay),
     };
   }
 
@@ -3261,6 +3446,7 @@ class ExternalEvent extends DataClass implements Insertable<ExternalEvent> {
     DateTime? start,
     Value<DateTime?> end = const Value.absent(),
     DateTime? lastSyncedAt,
+    bool? isAllDay,
   }) => ExternalEvent(
     id: id ?? this.id,
     googleEventId: googleEventId ?? this.googleEventId,
@@ -3269,6 +3455,7 @@ class ExternalEvent extends DataClass implements Insertable<ExternalEvent> {
     start: start ?? this.start,
     end: end.present ? end.value : this.end,
     lastSyncedAt: lastSyncedAt ?? this.lastSyncedAt,
+    isAllDay: isAllDay ?? this.isAllDay,
   );
   ExternalEvent copyWithCompanion(ExternalEventsCompanion data) {
     return ExternalEvent(
@@ -3285,6 +3472,7 @@ class ExternalEvent extends DataClass implements Insertable<ExternalEvent> {
       lastSyncedAt: data.lastSyncedAt.present
           ? data.lastSyncedAt.value
           : this.lastSyncedAt,
+      isAllDay: data.isAllDay.present ? data.isAllDay.value : this.isAllDay,
     );
   }
 
@@ -3297,7 +3485,8 @@ class ExternalEvent extends DataClass implements Insertable<ExternalEvent> {
           ..write('title: $title, ')
           ..write('start: $start, ')
           ..write('end: $end, ')
-          ..write('lastSyncedAt: $lastSyncedAt')
+          ..write('lastSyncedAt: $lastSyncedAt, ')
+          ..write('isAllDay: $isAllDay')
           ..write(')'))
         .toString();
   }
@@ -3311,6 +3500,7 @@ class ExternalEvent extends DataClass implements Insertable<ExternalEvent> {
     start,
     end,
     lastSyncedAt,
+    isAllDay,
   );
   @override
   bool operator ==(Object other) =>
@@ -3322,7 +3512,8 @@ class ExternalEvent extends DataClass implements Insertable<ExternalEvent> {
           other.title == this.title &&
           other.start == this.start &&
           other.end == this.end &&
-          other.lastSyncedAt == this.lastSyncedAt);
+          other.lastSyncedAt == this.lastSyncedAt &&
+          other.isAllDay == this.isAllDay);
 }
 
 class ExternalEventsCompanion extends UpdateCompanion<ExternalEvent> {
@@ -3333,6 +3524,7 @@ class ExternalEventsCompanion extends UpdateCompanion<ExternalEvent> {
   final Value<DateTime> start;
   final Value<DateTime?> end;
   final Value<DateTime> lastSyncedAt;
+  final Value<bool> isAllDay;
   final Value<int> rowid;
   const ExternalEventsCompanion({
     this.id = const Value.absent(),
@@ -3342,6 +3534,7 @@ class ExternalEventsCompanion extends UpdateCompanion<ExternalEvent> {
     this.start = const Value.absent(),
     this.end = const Value.absent(),
     this.lastSyncedAt = const Value.absent(),
+    this.isAllDay = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   ExternalEventsCompanion.insert({
@@ -3352,6 +3545,7 @@ class ExternalEventsCompanion extends UpdateCompanion<ExternalEvent> {
     required DateTime start,
     this.end = const Value.absent(),
     required DateTime lastSyncedAt,
+    this.isAllDay = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        googleEventId = Value(googleEventId),
@@ -3367,6 +3561,7 @@ class ExternalEventsCompanion extends UpdateCompanion<ExternalEvent> {
     Expression<DateTime>? start,
     Expression<DateTime>? end,
     Expression<DateTime>? lastSyncedAt,
+    Expression<bool>? isAllDay,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -3377,6 +3572,7 @@ class ExternalEventsCompanion extends UpdateCompanion<ExternalEvent> {
       if (start != null) 'start': start,
       if (end != null) 'end': end,
       if (lastSyncedAt != null) 'last_synced_at': lastSyncedAt,
+      if (isAllDay != null) 'is_all_day': isAllDay,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -3389,6 +3585,7 @@ class ExternalEventsCompanion extends UpdateCompanion<ExternalEvent> {
     Value<DateTime>? start,
     Value<DateTime?>? end,
     Value<DateTime>? lastSyncedAt,
+    Value<bool>? isAllDay,
     Value<int>? rowid,
   }) {
     return ExternalEventsCompanion(
@@ -3399,6 +3596,7 @@ class ExternalEventsCompanion extends UpdateCompanion<ExternalEvent> {
       start: start ?? this.start,
       end: end ?? this.end,
       lastSyncedAt: lastSyncedAt ?? this.lastSyncedAt,
+      isAllDay: isAllDay ?? this.isAllDay,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -3427,6 +3625,9 @@ class ExternalEventsCompanion extends UpdateCompanion<ExternalEvent> {
     if (lastSyncedAt.present) {
       map['last_synced_at'] = Variable<DateTime>(lastSyncedAt.value);
     }
+    if (isAllDay.present) {
+      map['is_all_day'] = Variable<bool>(isAllDay.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -3443,6 +3644,7 @@ class ExternalEventsCompanion extends UpdateCompanion<ExternalEvent> {
           ..write('start: $start, ')
           ..write('end: $end, ')
           ..write('lastSyncedAt: $lastSyncedAt, ')
+          ..write('isAllDay: $isAllDay, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -5446,6 +5648,7 @@ typedef $$ItemsTableCreateCompanionBuilder =
       Value<DateTime?> archivedAt,
       Value<int> sortOrder,
       Value<int> reminderOffsetMinutes,
+      Value<DateTime?> overduePenaltyAppliedAt,
       Value<int> rowid,
     });
 typedef $$ItemsTableUpdateCompanionBuilder =
@@ -5470,6 +5673,7 @@ typedef $$ItemsTableUpdateCompanionBuilder =
       Value<DateTime?> archivedAt,
       Value<int> sortOrder,
       Value<int> reminderOffsetMinutes,
+      Value<DateTime?> overduePenaltyAppliedAt,
       Value<int> rowid,
     });
 
@@ -5665,6 +5869,11 @@ class $$ItemsTableFilterComposer extends Composer<_$AppDatabase, $ItemsTable> {
 
   ColumnFilters<int> get reminderOffsetMinutes => $composableBuilder(
     column: $table.reminderOffsetMinutes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get overduePenaltyAppliedAt => $composableBuilder(
+    column: $table.overduePenaltyAppliedAt,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5889,6 +6098,11 @@ class $$ItemsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<DateTime> get overduePenaltyAppliedAt => $composableBuilder(
+    column: $table.overduePenaltyAppliedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$AreasTableOrderingComposer get areaId {
     final $$AreasTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -6014,6 +6228,11 @@ class $$ItemsTableAnnotationComposer
 
   GeneratedColumn<int> get reminderOffsetMinutes => $composableBuilder(
     column: $table.reminderOffsetMinutes,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get overduePenaltyAppliedAt => $composableBuilder(
+    column: $table.overduePenaltyAppliedAt,
     builder: (column) => column,
   );
 
@@ -6193,6 +6412,7 @@ class $$ItemsTableTableManager
                 Value<DateTime?> archivedAt = const Value.absent(),
                 Value<int> sortOrder = const Value.absent(),
                 Value<int> reminderOffsetMinutes = const Value.absent(),
+                Value<DateTime?> overduePenaltyAppliedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ItemsCompanion(
                 id: id,
@@ -6215,6 +6435,7 @@ class $$ItemsTableTableManager
                 archivedAt: archivedAt,
                 sortOrder: sortOrder,
                 reminderOffsetMinutes: reminderOffsetMinutes,
+                overduePenaltyAppliedAt: overduePenaltyAppliedAt,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -6239,6 +6460,7 @@ class $$ItemsTableTableManager
                 Value<DateTime?> archivedAt = const Value.absent(),
                 Value<int> sortOrder = const Value.absent(),
                 Value<int> reminderOffsetMinutes = const Value.absent(),
+                Value<DateTime?> overduePenaltyAppliedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ItemsCompanion.insert(
                 id: id,
@@ -6261,6 +6483,7 @@ class $$ItemsTableTableManager
                 archivedAt: archivedAt,
                 sortOrder: sortOrder,
                 reminderOffsetMinutes: reminderOffsetMinutes,
+                overduePenaltyAppliedAt: overduePenaltyAppliedAt,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -6418,6 +6641,7 @@ typedef $$OccurrencesTableCreateCompanionBuilder =
       Value<DateTime?> scheduledStart,
       required OccurrenceStatus status,
       Value<DateTime?> completedAt,
+      Value<DateTime?> overduePenaltyAppliedAt,
       Value<int> rowid,
     });
 typedef $$OccurrencesTableUpdateCompanionBuilder =
@@ -6428,6 +6652,7 @@ typedef $$OccurrencesTableUpdateCompanionBuilder =
       Value<DateTime?> scheduledStart,
       Value<OccurrenceStatus> status,
       Value<DateTime?> completedAt,
+      Value<DateTime?> overduePenaltyAppliedAt,
       Value<int> rowid,
     });
 
@@ -6485,6 +6710,11 @@ class $$OccurrencesTableFilterComposer
 
   ColumnFilters<DateTime> get completedAt => $composableBuilder(
     column: $table.completedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get overduePenaltyAppliedAt => $composableBuilder(
+    column: $table.overduePenaltyAppliedAt,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -6546,6 +6776,11 @@ class $$OccurrencesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<DateTime> get overduePenaltyAppliedAt => $composableBuilder(
+    column: $table.overduePenaltyAppliedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$ItemsTableOrderingComposer get itemId {
     final $$ItemsTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -6595,6 +6830,11 @@ class $$OccurrencesTableAnnotationComposer
 
   GeneratedColumn<DateTime> get completedAt => $composableBuilder(
     column: $table.completedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get overduePenaltyAppliedAt => $composableBuilder(
+    column: $table.overduePenaltyAppliedAt,
     builder: (column) => column,
   );
 
@@ -6656,6 +6896,7 @@ class $$OccurrencesTableTableManager
                 Value<DateTime?> scheduledStart = const Value.absent(),
                 Value<OccurrenceStatus> status = const Value.absent(),
                 Value<DateTime?> completedAt = const Value.absent(),
+                Value<DateTime?> overduePenaltyAppliedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => OccurrencesCompanion(
                 id: id,
@@ -6664,6 +6905,7 @@ class $$OccurrencesTableTableManager
                 scheduledStart: scheduledStart,
                 status: status,
                 completedAt: completedAt,
+                overduePenaltyAppliedAt: overduePenaltyAppliedAt,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -6674,6 +6916,7 @@ class $$OccurrencesTableTableManager
                 Value<DateTime?> scheduledStart = const Value.absent(),
                 required OccurrenceStatus status,
                 Value<DateTime?> completedAt = const Value.absent(),
+                Value<DateTime?> overduePenaltyAppliedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => OccurrencesCompanion.insert(
                 id: id,
@@ -6682,6 +6925,7 @@ class $$OccurrencesTableTableManager
                 scheduledStart: scheduledStart,
                 status: status,
                 completedAt: completedAt,
+                overduePenaltyAppliedAt: overduePenaltyAppliedAt,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -7329,6 +7573,7 @@ typedef $$ExternalEventsTableCreateCompanionBuilder =
       required DateTime start,
       Value<DateTime?> end,
       required DateTime lastSyncedAt,
+      Value<bool> isAllDay,
       Value<int> rowid,
     });
 typedef $$ExternalEventsTableUpdateCompanionBuilder =
@@ -7340,6 +7585,7 @@ typedef $$ExternalEventsTableUpdateCompanionBuilder =
       Value<DateTime> start,
       Value<DateTime?> end,
       Value<DateTime> lastSyncedAt,
+      Value<bool> isAllDay,
       Value<int> rowid,
     });
 
@@ -7384,6 +7630,11 @@ class $$ExternalEventsTableFilterComposer
 
   ColumnFilters<DateTime> get lastSyncedAt => $composableBuilder(
     column: $table.lastSyncedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isAllDay => $composableBuilder(
+    column: $table.isAllDay,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -7431,6 +7682,11 @@ class $$ExternalEventsTableOrderingComposer
     column: $table.lastSyncedAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<bool> get isAllDay => $composableBuilder(
+    column: $table.isAllDay,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$ExternalEventsTableAnnotationComposer
@@ -7468,6 +7724,9 @@ class $$ExternalEventsTableAnnotationComposer
     column: $table.lastSyncedAt,
     builder: (column) => column,
   );
+
+  GeneratedColumn<bool> get isAllDay =>
+      $composableBuilder(column: $table.isAllDay, builder: (column) => column);
 }
 
 class $$ExternalEventsTableTableManager
@@ -7510,6 +7769,7 @@ class $$ExternalEventsTableTableManager
                 Value<DateTime> start = const Value.absent(),
                 Value<DateTime?> end = const Value.absent(),
                 Value<DateTime> lastSyncedAt = const Value.absent(),
+                Value<bool> isAllDay = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ExternalEventsCompanion(
                 id: id,
@@ -7519,6 +7779,7 @@ class $$ExternalEventsTableTableManager
                 start: start,
                 end: end,
                 lastSyncedAt: lastSyncedAt,
+                isAllDay: isAllDay,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -7530,6 +7791,7 @@ class $$ExternalEventsTableTableManager
                 required DateTime start,
                 Value<DateTime?> end = const Value.absent(),
                 required DateTime lastSyncedAt,
+                Value<bool> isAllDay = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ExternalEventsCompanion.insert(
                 id: id,
@@ -7539,6 +7801,7 @@ class $$ExternalEventsTableTableManager
                 start: start,
                 end: end,
                 lastSyncedAt: lastSyncedAt,
+                isAllDay: isAllDay,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

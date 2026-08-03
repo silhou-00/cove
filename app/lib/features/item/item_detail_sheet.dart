@@ -8,6 +8,7 @@ import '../../data/db/database.dart' show Area, Item, ItemsCompanion, Tag;
 import '../../data/db/tables.dart' show ItemPriority, ItemStatus;
 import '../calendar/calendar_export_trigger.dart';
 import 'widgets/date_time_pickers.dart';
+import 'widgets/reminder_offset_picker.dart';
 
 DateTime _startOfDay(DateTime d) => DateTime(d.year, d.month, d.day);
 
@@ -86,16 +87,6 @@ class _ItemDetailSheetState extends ConsumerState<ItemDetailSheet> {
   bool _noTime = true;
   String _repeat = 'NONE';
   int _reminderOffsetMinutes = 60;
-
-  static const _reminderOffsetOptions = [60, 300, 1440, -1];
-
-  static String _reminderOffsetLabel(int minutes) => switch (minutes) {
-    -1 => 'OFF',
-    60 => '1 HOUR',
-    300 => '5 HOURS',
-    1440 => '1 DAY',
-    final m => '$m MIN',
-  };
 
   // Google Calendar export (§9) manual toggle — named distinctly from the
   // `_calendar*` fields above (those are the date-picker's own popup, not
@@ -909,19 +900,10 @@ class _ItemDetailSheetState extends ConsumerState<ItemDetailSheet> {
                       ).copyWith(letterSpacing: context.s(1.4)),
                     ),
                     SizedBox(height: context.s(6)),
-                    Wrap(
-                      spacing: context.s(6),
-                      runSpacing: context.s(6),
-                      children: [
-                        for (final option in _reminderOffsetOptions)
-                          RepeatChip(
-                            label: _reminderOffsetLabel(option),
-                            active: _reminderOffsetMinutes == option,
-                            onTap: () => setState(
-                              () => _reminderOffsetMinutes = option,
-                            ),
-                          ),
-                      ],
+                    ReminderOffsetPicker(
+                      minutes: _reminderOffsetMinutes,
+                      onChanged: (value) =>
+                          setState(() => _reminderOffsetMinutes = value),
                     ),
                     if (_gcalConnected && _hasSavedDate) ...[
                       SizedBox(height: context.s(14)),

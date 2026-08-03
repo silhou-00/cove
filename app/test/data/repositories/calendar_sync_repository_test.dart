@@ -77,6 +77,38 @@ void main() {
       },
     );
 
+    test(
+      'applyEvents marks a dateTime event as not all-day (time-block-like)',
+      () async {
+        await calendarRepo.applyEvents([
+          calendar.Event(
+            id: 'evt-timed',
+            summary: 'Standup',
+            start: calendar.EventDateTime(dateTime: DateTime(2026, 8, 1, 9)),
+          ),
+        ]);
+
+        final row = (await db.select(db.externalEvents).get()).single;
+        expect(row.isAllDay, isFalse);
+      },
+    );
+
+    test(
+      'applyEvents marks a date-only event as all-day (deadline-like)',
+      () async {
+        await calendarRepo.applyEvents([
+          calendar.Event(
+            id: 'evt-allday',
+            summary: 'Company holiday',
+            start: calendar.EventDateTime(date: DateTime(2026, 8, 3)),
+          ),
+        ]);
+
+        final row = (await db.select(db.externalEvents).get()).single;
+        expect(row.isAllDay, isTrue);
+      },
+    );
+
     test('applyEvents skips events missing an id or a start', () async {
       await calendarRepo.applyEvents([
         calendar.Event(

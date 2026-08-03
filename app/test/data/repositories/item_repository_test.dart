@@ -128,6 +128,108 @@ void main() {
     );
   });
 
+  group('applyOverduePenalties (§17 addendum, overdue XP penalty)', () {
+    Future<void> seedXp(int amount) async {
+      await db
+          .into(db.xpLogs)
+          .insert(
+            XpLogsCompanion.insert(
+              id: 'seed-$amount',
+              itemId: 'seed',
+              xpAwarded: amount,
+              awardedAt: DateTime(2026, 8, 1),
+            ),
+          );
+    }
+
+    test('penalizes an item past its dueAt and flags it so it never re-fires', () async {
+      await seedXp(1000);
+      final item = await itemRepo.create(
+        title: 'Overdue thing',
+        dueAt: DateTime(2026, 8, 1, 9, 0),
+      );
+
+      await itemRepo.applyOverduePenalties(now: DateTime(2026, 8, 2));
+
+      final penaltyRows = await db.select(db.xpLogs).get();
+      expect(penaltyRows.where((r) => r.itemId == item.id), hasLength(1));
+      final flagged = await itemRepo.getByIdWithArea(item.id);
+      expect(flagged?.item.overduePenaltyAppliedAt, isNotNull);
+
+      // Scanning again must not double-charge the same item.
+      await itemRepo.applyOverduePenalties(now: DateTime(2026, 8, 3));
+      final afterSecondScan = await db.select(db.xpLogs).get();
+      expect(
+        afterSecondScan.where((r) => r.itemId == item.id),
+        hasLength(1),
+      );
+    });
+
+    test('leaves an item alone before its deadline has passed', () async {
+      await seedXp(1000);
+      final item = await itemRepo.create(
+        title: 'Not due yet',
+        dueAt: DateTime(2026, 8, 10, 9, 0),
+      );
+
+      await itemRepo.applyOverduePenalties(now: DateTime(2026, 8, 2));
+
+      final penaltyRows = await db.select(db.xpLogs).get();
+      expect(penaltyRows.where((r) => r.itemId == item.id), isEmpty);
+    });
+
+    test('uses scheduledEnd as the overdue anchor for a time block', () async {
+      await seedXp(1000);
+      final item = await itemRepo.create(
+        title: 'Time block',
+        scheduledStart: DateTime(2026, 8, 1, 9, 0),
+        scheduledEnd: DateTime(2026, 8, 1, 10, 0),
+      );
+
+      // Past scheduledStart but not yet scheduledEnd — not overdue yet.
+      await itemRepo.applyOverduePenalties(now: DateTime(2026, 8, 1, 9, 30));
+      expect(
+        (await db.select(db.xpLogs).get()).where((r) => r.itemId == item.id),
+        isEmpty,
+      );
+
+      await itemRepo.applyOverduePenalties(now: DateTime(2026, 8, 1, 10, 30));
+      expect(
+        (await db.select(db.xpLogs).get()).where((r) => r.itemId == item.id),
+        hasLength(1),
+      );
+    });
+
+    test('penalizes an overdue recurring occurrence under the template\'s item_id', () async {
+      await seedXp(1000);
+      final item = await itemRepo.create(
+        title: 'Daily thing',
+        dueAt: DateTime(2026, 7, 27, 9, 0),
+        recurrenceRule: 'FREQ=DAILY',
+        now: DateTime(2026, 7, 27),
+      );
+      final occurrence =
+          (await (db.select(db.occurrences)
+                    ..where((o) => o.itemId.equals(item.id))
+                    ..orderBy([(o) => OrderingTerm(expression: o.date)]))
+                .get())
+              .first;
+
+      await itemRepo.applyOverduePenalties(
+        now: occurrence.date.add(const Duration(days: 1)),
+      );
+
+      final penaltyRows = (await db.select(
+        db.xpLogs,
+      ).get()).where((r) => r.itemId == item.id);
+      expect(penaltyRows, hasLength(1));
+      final flaggedOccurrence = await (db.select(
+        db.occurrences,
+      )..where((o) => o.id.equals(occurrence.id))).getSingle();
+      expect(flaggedOccurrence.overduePenaltyAppliedAt, isNotNull);
+    });
+  });
+
   test('createFromQuickAdd resolves @area against seeded areas', () async {
     final areas = await areaRepo.getAll();
     const parser = QuickAddParser();
@@ -327,6 +429,27 @@ void main() {
       )..where((w) => w.widgetName.equals('up_next'))).getSingle();
       final payload = jsonDecode(cache.payloadJson) as List;
       expect(payload, isEmpty);
+    },
+  );
+
+  test(
+    'up_next widget cache includes only the soonest open occurrence per recurring item',
+    () async {
+      await itemRepo.create(
+        title: 'Meditate',
+        dueAt: DateTime(2026, 7, 27, 9, 0),
+        recurrenceRule: 'FREQ=DAILY',
+        now: DateTime(2026, 7, 27),
+      );
+
+      final cache = await (db.select(
+        db.widgetCaches,
+      )..where((w) => w.widgetName.equals('up_next'))).getSingle();
+      final payload = jsonDecode(cache.payloadJson) as List;
+      // ~60 occurrences were materialized, but the widget should only ever
+      // carry one row for this recurring item — the soonest open one.
+      expect(payload, hasLength(1));
+      expect(payload.single['dueAt'], DateTime(2026, 7, 27, 9, 0).toIso8601String());
     },
   );
 
@@ -1028,7 +1151,10 @@ void main() {
         );
         final mondayRow = (await itemRepo.watchDueForDay(monday).first).single;
 
-        await itemRepo.toggleOccurrenceComplete(mondayRow.occurrenceId!);
+        await itemRepo.toggleOccurrenceComplete(
+          mondayRow.occurrenceId!,
+          now: monday,
+        );
 
         final stats = await itemRepo.watchAreaProgress(now: monday).first;
         final schoolStat = stats.firstWhere((s) => s.area.id == school.id);

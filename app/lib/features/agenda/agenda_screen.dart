@@ -8,6 +8,7 @@ import '../../data/db/tables.dart' show ItemPriority;
 import '../../data/repositories/item_repository.dart';
 import '../../data/repositories/settings_repository.dart' show ItemSortMode;
 import '../../domain/services/gamification.dart';
+import '../../domain/services/week_math.dart';
 import '../item/item_detail_sheet.dart';
 import '../search/search_screen.dart';
 import '../shared/cosmetic_cluster.dart';
@@ -68,10 +69,13 @@ const _monthNames = [
 
 DateTime _startOfDay(DateTime d) => DateTime(d.year, d.month, d.day);
 
-enum _View { today, upNext }
+enum _View { today, upNext, timeBlock }
 
-/// Today/Agenda + Up Next (§5) — one screen, two views, matching the
-/// design's shared "Today | Up Next" tab-switcher header.
+/// Today/Agenda + Up Next + Time Block (§5) — one screen, three views.
+/// Time Block is its own tab (rather than folded into Up Next or Today)
+/// so a scheduled item's block doesn't clog either deadline-focused list —
+/// it only ever shows there, for the current week, doubling as a
+/// lightweight weekly scheduler.
 class AgendaScreen extends ConsumerStatefulWidget {
   const AgendaScreen({super.key, this.initialUpNext = false});
 
@@ -312,27 +316,37 @@ class _AgendaScreenState extends ConsumerState<AgendaScreen> {
                 onSortTap: _pickSort,
               ),
               Expanded(
-                child: _view == _View.today
-                    ? _TodayBody(
-                        today: today,
-                        onToggle: _toggle,
-                        onArchive: _archive,
-                        selectedKeys: _selected.keys.toSet(),
-                        onLongPress: _toggleSelect,
-                        onSelectTap: _toggleSelect,
-                        sort: _sort,
-                        onReorder: _reorder,
-                      )
-                    : _UpNextBody(
-                        today: today,
-                        onToggle: _toggle,
-                        onArchive: _archive,
-                        selectedKeys: _selected.keys.toSet(),
-                        onLongPress: _toggleSelect,
-                        onSelectTap: _toggleSelect,
-                        sort: _sort,
-                        onReorder: _reorder,
-                      ),
+                child: switch (_view) {
+                  _View.today => _TodayBody(
+                    today: today,
+                    onToggle: _toggle,
+                    onArchive: _archive,
+                    selectedKeys: _selected.keys.toSet(),
+                    onLongPress: _toggleSelect,
+                    onSelectTap: _toggleSelect,
+                    sort: _sort,
+                    onReorder: _reorder,
+                  ),
+                  _View.upNext => _UpNextBody(
+                    today: today,
+                    onToggle: _toggle,
+                    onArchive: _archive,
+                    selectedKeys: _selected.keys.toSet(),
+                    onLongPress: _toggleSelect,
+                    onSelectTap: _toggleSelect,
+                    sort: _sort,
+                    onReorder: _reorder,
+                  ),
+                  _View.timeBlock => _TimeBlockBody(
+                    today: today,
+                    onToggle: _toggle,
+                    onOpenItem: (iwa) => showItemDetailSheetAndMaybeExport(
+                      context,
+                      ref,
+                      iwa.item.id,
+                    ),
+                  ),
+                },
               ),
             ],
           ),
@@ -580,6 +594,12 @@ class _TabSwitcher extends StatelessWidget {
             active: view == _View.upNext,
             onTap: () => onChanged(_View.upNext),
           ),
+          SizedBox(width: context.s(20)),
+          _TabLabel(
+            label: 'Time Block',
+            active: view == _View.timeBlock,
+            onTap: () => onChanged(_View.timeBlock),
+          ),
           const Spacer(),
           GestureDetector(
             onTap: onSortTap,
@@ -658,26 +678,27 @@ class _TodayBody extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final scheduled = sortItems(
-      ref.watch(scheduledForDayProvider(today)).value ?? const <ItemWithArea>[],
-      sort,
-    );
     final due = sortItems(
       ref.watch(dueForDayProvider(today)).value ?? const <ItemWithArea>[],
       sort,
     );
+    // Only all-day (deadline-like) events — a specific-time event is a
+    // time block, shown in the Time Block tab instead so it doesn't
+    // duplicate into this deadline-focused view too.
     final externalEvents =
-        ref
-            .watch(
-              externalEventsInRangeProvider((
-                start: today,
-                end: today.add(const Duration(days: 1)),
-              )),
-            )
-            .value ??
-        const <ExternalEvent>[];
+        (ref
+                .watch(
+                  externalEventsInRangeProvider((
+                    start: today,
+                    end: today.add(const Duration(days: 1)),
+                  )),
+                )
+                .value ??
+            const <ExternalEvent>[])
+        .where((e) => e.isAllDay)
+        .toList();
 
-    if (scheduled.isEmpty && due.isEmpty && externalEvents.isEmpty) {
+    if (due.isEmpty && externalEvents.isEmpty) {
       return const _EmptyState(
         message: 'Nothing today. Tap + to add something.',
       );
@@ -695,39 +716,6 @@ class _TodayBody extends ConsumerWidget {
           ),
           SizedBox(height: context.s(8)),
           for (final event in externalEvents) _ExternalEventRow(event: event),
-          SizedBox(height: context.s(12)),
-        ],
-        if (scheduled.isNotEmpty) ...[
-          Text(
-            'SCHEDULED',
-            style: AppTypography.monoLabel(
-              context,
-            ).copyWith(letterSpacing: context.s(1.4)),
-          ),
-          SizedBox(height: context.s(8)),
-          _ItemSection(
-            items: scheduled,
-            sort: sort,
-            selectedKeys: selectedKeys,
-            onToggle: onToggle,
-            onArchive: onArchive,
-            onOpenItem: (iwa) =>
-                showItemDetailSheetAndMaybeExport(context, ref, iwa.item.id),
-            onLongPress: onLongPress,
-            onSelectTap: onSelectTap,
-            onReorder: onReorder,
-            leadingBuilder: (iwa) => SizedBox(
-              width: context.s(44),
-              child: Text(
-                iwa.item.scheduledEnd != null
-                    ? '${timeLabel(iwa.item.scheduledStart!)}\n${timeLabel(iwa.item.scheduledEnd!)}'
-                    : timeLabel(iwa.item.scheduledStart!),
-                style: AppTypography.mono(
-                  context,
-                ).copyWith(fontSize: context.s(11)),
-              ),
-            ),
-          ),
           SizedBox(height: context.s(12)),
         ],
         if (due.isNotEmpty) ...[
@@ -789,9 +777,13 @@ class _UpNextBody extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tomorrow = today.add(const Duration(days: 1));
+    // Due-only — time blocks live in the Time Block tab instead, so they
+    // don't clog this deadline-focused list (§5 addendum, on request).
     final items =
-        ref.watch(upcomingItemsProvider(tomorrow)).value ??
-        const <ItemWithArea>[];
+        (ref.watch(upcomingItemsProvider(tomorrow)).value ??
+                const <ItemWithArea>[])
+            .where((iwa) => iwa.item.scheduledStart == null)
+            .toList();
 
     if (items.isEmpty) {
       return const _EmptyState(message: 'Nothing coming up.');
@@ -799,8 +791,7 @@ class _UpNextBody extends ConsumerWidget {
 
     final groups = <String, List<ItemWithArea>>{};
     for (final iwa in items) {
-      final effectiveDate = iwa.item.scheduledStart ?? iwa.item.dueAt!;
-      final label = _bucketLabel(today, effectiveDate);
+      final label = _bucketLabel(today, iwa.item.dueAt!);
       groups.putIfAbsent(label, () => []).add(iwa);
     }
 
@@ -836,13 +827,9 @@ class _UpNextBody extends ConsumerWidget {
             onReorder: onReorder,
             trailingBuilder: (iwa) {
               final item = iwa.item;
-              final label = item.scheduledStart != null
-                  ? (item.scheduledEnd != null
-                        ? '${timeLabel(item.scheduledStart!)}–'
-                              '${timeLabel(item.scheduledEnd!)}'
-                        : timeLabel(item.scheduledStart!))
-                  : (dueTimeLabel(item.dueAt!) ??
-                        _weekdayNames[item.dueAt!.weekday - 1]);
+              final label =
+                  dueTimeLabel(item.dueAt!) ??
+                  _weekdayNames[item.dueAt!.weekday - 1];
               return Text(
                 label,
                 style: AppTypography.mono(
@@ -854,6 +841,345 @@ class _UpNextBody extends ConsumerWidget {
           SizedBox(height: context.s(14)),
         ],
       ],
+    );
+  }
+}
+
+const _weekdayFullNames = [
+  'MONDAY',
+  'TUESDAY',
+  'WEDNESDAY',
+  'THURSDAY',
+  'FRIDAY',
+  'SATURDAY',
+  'SUNDAY',
+];
+
+/// Time Block (§5 addendum, on request): the current week's time-blocked
+/// items only, one row per day, respecting the same first-day-of-week
+/// setting Calendar's week view already does. Deliberately separate from
+/// Today/Up Next (both deadline-focused) so a time block never clutters
+/// either — it only ever shows here, and only for the week it falls in.
+/// A day with no blocks still gets its own (empty) row, matching the
+/// always-list-every-day shape asked for.
+class _TimeBlockBody extends ConsumerWidget {
+  const _TimeBlockBody({
+    required this.today,
+    required this.onToggle,
+    required this.onOpenItem,
+  });
+  final DateTime today;
+  final Future<void> Function(ItemWithArea) onToggle;
+  final ValueChanged<ItemWithArea> onOpenItem;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final firstWeekday =
+        ref.watch(firstDayOfWeekProvider).value ?? DateTime.sunday;
+    final weekStart = startOfWeek(today, firstWeekday);
+    final weekEnd = weekStart.add(const Duration(days: 7));
+
+    final items =
+        (ref
+                    .watch(
+                      itemsInRangeProvider((start: weekStart, end: weekEnd)),
+                    )
+                    .value ??
+                const <ItemWithArea>[])
+            .where((iwa) => iwa.item.scheduledStart != null)
+            .toList();
+    // Specific-time (time-block-like) external events only — an all-day
+    // one is deadline-like, shown in Today/Up Next instead (§9
+    // addendum, categorization).
+    final externalEvents =
+        (ref
+                    .watch(
+                      externalEventsInRangeProvider((
+                        start: weekStart,
+                        end: weekEnd,
+                      )),
+                    )
+                    .value ??
+                const <ExternalEvent>[])
+            .where((e) => !e.isAllDay)
+            .toList();
+
+    final byDay = <DateTime, List<_TimeBlockEntry>>{};
+    for (final iwa in items) {
+      final day = _startOfDay(iwa.item.scheduledStart!);
+      byDay.putIfAbsent(day, () => []).add(_TimeBlockEntry.item(iwa));
+    }
+    for (final event in externalEvents) {
+      final day = _startOfDay(event.start);
+      byDay.putIfAbsent(day, () => []).add(_TimeBlockEntry.external(event));
+    }
+    for (final dayEntries in byDay.values) {
+      dayEntries.sort((a, b) => a.start.compareTo(b.start));
+    }
+
+    return ListView(
+      padding: EdgeInsets.only(top: context.s(12), bottom: context.s(96)),
+      children: [
+        for (var i = 0; i < 7; i++)
+          _TimeBlockDayRow(
+            day: weekStart.add(Duration(days: i)),
+            entries: byDay[weekStart.add(Duration(days: i))] ?? const [],
+            onToggle: onToggle,
+            onOpenItem: onOpenItem,
+          ),
+      ],
+    );
+  }
+}
+
+/// One card's worth of content in a [_TimeBlockDayRow] — either a Cove
+/// item or a read-only imported Google Calendar event, sorted together
+/// by their common start time.
+class _TimeBlockEntry {
+  const _TimeBlockEntry.item(ItemWithArea item)
+    : itemWithArea = item,
+      externalEvent = null;
+  const _TimeBlockEntry.external(ExternalEvent event)
+    : itemWithArea = null,
+      externalEvent = event;
+
+  final ItemWithArea? itemWithArea;
+  final ExternalEvent? externalEvent;
+
+  DateTime get start =>
+      itemWithArea?.item.scheduledStart ?? externalEvent!.start;
+}
+
+class _TimeBlockDayRow extends StatelessWidget {
+  const _TimeBlockDayRow({
+    required this.day,
+    required this.entries,
+    required this.onToggle,
+    required this.onOpenItem,
+  });
+  final DateTime day;
+  final List<_TimeBlockEntry> entries;
+  final Future<void> Function(ItemWithArea) onToggle;
+  final ValueChanged<ItemWithArea> onOpenItem;
+
+  @override
+  Widget build(BuildContext context) {
+    final isToday = day == _startOfDay(DateTime.now());
+    return Padding(
+      padding: EdgeInsets.only(bottom: context.s(10)),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: context.s(84),
+            child: Padding(
+              padding: EdgeInsets.only(top: context.s(6)),
+              child: Text(
+                '${_weekdayFullNames[day.weekday - 1]}:',
+                style: AppTypography.monoLabel(context).copyWith(
+                  fontSize: context.s(10.5),
+                  letterSpacing: context.s(0.8),
+                  color: isToday
+                      ? context.colors.accent
+                      : context.colors.inkMuted,
+                ),
+              ),
+            ),
+          ),
+          Expanded(
+            child: entries.isEmpty
+                ? SizedBox(height: context.s(34))
+                : SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        for (final entry in entries) ...[
+                          if (entry.itemWithArea case final iwa?)
+                            _TimeBlockCard(
+                              itemWithArea: iwa,
+                              onToggle: () => onToggle(iwa),
+                              onTap: () => onOpenItem(iwa),
+                            )
+                          else
+                            _TimeBlockExternalCard(
+                              event: entry.externalEvent!,
+                            ),
+                          SizedBox(width: context.s(8)),
+                        ],
+                      ],
+                    ),
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// One time-block "chip card" inside a [_TimeBlockDayRow] — compact
+/// enough to lay out several per day horizontally, unlike the full-width
+/// [ItemRow] used everywhere else. Drops off its row the same way every
+/// other list here does: completing it removes it from the open-items
+/// query this screen watches, no separate handling needed.
+class _TimeBlockCard extends StatelessWidget {
+  const _TimeBlockCard({
+    required this.itemWithArea,
+    required this.onToggle,
+    required this.onTap,
+  });
+  final ItemWithArea itemWithArea;
+  final VoidCallback onToggle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final item = itemWithArea.item;
+    final done = item.status.name == 'done';
+    final areaColor = itemWithArea.area != null
+        ? colorFromHex(itemWithArea.area!.color)
+        : context.colors.inkDisabled;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        constraints: BoxConstraints(maxWidth: context.s(160)),
+        padding: EdgeInsets.symmetric(
+          horizontal: context.s(10),
+          vertical: context.s(8),
+        ),
+        decoration: BoxDecoration(
+          color: context.colors.surface,
+          border: Border.all(color: context.colors.border),
+          borderRadius: BorderRadius.circular(context.s(10)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: context.s(2),
+              height: context.s(28),
+              color: areaColor,
+            ),
+            SizedBox(width: context.s(8)),
+            Flexible(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.scheduledEnd != null
+                        ? '${timeLabel(item.scheduledStart!)}–'
+                              '${timeLabel(item.scheduledEnd!)}'
+                        : timeLabel(item.scheduledStart!),
+                    style: AppTypography.mono(
+                      context,
+                    ).copyWith(fontSize: context.s(9.5), color: context.colors.inkFaint),
+                  ),
+                  Text(
+                    item.shortTitle ?? item.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.itemTitle(context).copyWith(
+                      fontSize: context.s(12.5),
+                      color: done
+                          ? context.colors.inkDisabled
+                          : context.colors.ink,
+                      decoration: done
+                          ? TextDecoration.lineThrough
+                          : TextDecoration.none,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(width: context.s(8)),
+            GestureDetector(
+              onTap: onToggle,
+              child: Container(
+                width: context.s(18),
+                height: context.s(18),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: done ? context.colors.ink : Colors.transparent,
+                  border: Border.all(
+                    color: done ? context.colors.ink : context.colors.inkDisabled,
+                    width: 1.5,
+                  ),
+                ),
+                alignment: Alignment.center,
+                child: done
+                    ? Icon(
+                        Icons.check,
+                        size: context.s(10),
+                        color: context.colors.surface,
+                      )
+                    : null,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// The [_TimeBlockCard]-shaped equivalent for an imported Google Calendar
+/// event — same "no complete-circle, no tap-to-edit" read-only rule as
+/// [_ExternalEventRow], just laid out to sit in the same horizontal row.
+class _TimeBlockExternalCard extends StatelessWidget {
+  const _TimeBlockExternalCard({required this.event});
+  final ExternalEvent event;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: BoxConstraints(maxWidth: context.s(160)),
+      padding: EdgeInsets.symmetric(
+        horizontal: context.s(10),
+        vertical: context.s(8),
+      ),
+      decoration: BoxDecoration(
+        color: context.colors.borderFaint,
+        border: Border.all(color: context.colors.borderSubtle),
+        borderRadius: BorderRadius.circular(context.s(10)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Flexible(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  event.end != null
+                      ? '${timeLabel(event.start)}–${timeLabel(event.end!)}'
+                      : timeLabel(event.start),
+                  style: AppTypography.mono(
+                    context,
+                  ).copyWith(fontSize: context.s(9.5), color: context.colors.inkFaint),
+                ),
+                Text(
+                  event.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.itemTitle(
+                    context,
+                  ).copyWith(fontSize: context.s(12.5), color: context.colors.inkMuted),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(width: context.s(8)),
+          Icon(
+            Icons.event_outlined,
+            size: context.s(14),
+            color: context.colors.inkFaint,
+          ),
+        ],
+      ),
     );
   }
 }

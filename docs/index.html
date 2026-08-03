@@ -1,0 +1,629 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cove, a calm offline-first task manager</title>
+  <meta name="description" content="Cove is a local-first task manager for Android. Quick Add parsing, home screen widgets, positive-only gamification, and optional Google Calendar sync." />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <nav class="nav" aria-label="Primary">
+    <a class="nav__brand" href="index.html"><img src="assets/img/cove-icon.png" alt="" width="26" height="26" />Cove</a>
+    <div class="nav__links">
+      <a href="privacy.html">Privacy</a>
+      <a href="https://github.com/silhou-00/cove" target="_blank" rel="noopener">GitHub</a>
+      <a class="nav__cta" href="https://github.com/silhou-00/cove/releases" target="_blank" rel="noopener">Download</a>
+    </div>
+  </nav>
+  <div class="nav-spacer"></div>
+
+  <header class="hero container">
+    <p class="eyebrow hero__kicker">Task manager for Android</p>
+    <div class="hero__brand-row">
+      <img class="hero__icon" src="assets/img/cove-icon.png" alt="Cove app icon" width="80" height="80" />
+      <h1 class="hero__title">Cove</h1>
+    </div>
+    <p class="hero__pitch">Your sheltered, organized space.</p>
+    <p class="hero__sub">A calm task manager that lives on your phone, not in the cloud. No account, no login, nothing running that doesn't need to be.</p>
+
+    <div class="demo reveal" aria-label="Quick Add demonstration">
+      <div class="demo__bar">
+        <span class="demo__dot"></span>
+        <span class="demo__label">Quick Add</span>
+      </div>
+      <div class="demo__body">
+        <div class="demo__input-row">
+          <span id="demo-input"></span><span class="demo__caret" aria-hidden="true"></span>
+        </div>
+        <div class="demo__result" id="demo-result"></div>
+      </div>
+    </div>
+
+    <div class="hero__actions">
+      <a class="btn btn--primary" href="https://github.com/silhou-00/cove/releases" target="_blank" rel="noopener">Download on GitHub</a>
+      <a class="btn btn--ghost" href="https://github.com/silhou-00/cove" target="_blank" rel="noopener">View source</a>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="tide"></div>
+  </div>
+
+  <section class="container reveal">
+    <div class="section__head">
+      <p class="eyebrow">What is Cove</p>
+      <h2 class="section__title">One person, one phone, nothing extra running.</h2>
+    </div>
+    <div class="section-body">
+      <span class="section-body__bar"></span>
+      <div class="section-body__text">
+        <p class="lede">Cove is a single-user, offline-first task manager. Everything you type in, tasks, schedules, recurring items, categories, is stored only in a local database on your phone. There's no account, no login, and no backend server involved at any point.</p>
+        <p>Type a task in plain language and Quick Add figures out the category, priority, and schedule for you. From there Cove gives you a few different ways to look at the same list: what's happening today, what needs attention soon, and a weekly view of anything you've time-blocked.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="container">
+    <div class="tide"></div>
+  </div>
+
+  <section class="container container--wide reveal" id="features">
+    <div class="section__head">
+      <p class="eyebrow">See it in motion</p>
+      <h2 class="section__title">Everything Cove actually does.</h2>
+    </div>
+
+    <div class="showcase">
+      <div class="showcase__labels">
+
+        <div class="showcase__item is-active" data-panel="today">
+          <p class="showcase__num">01</p>
+          <h3 class="showcase__item-title">Today</h3>
+          <p class="showcase__item-desc">What's due, right now. Tap the circle to complete something without leaving the list.</p>
+          <div class="showcase__inline-mock">
+            <div class="mockrow">
+              <span class="mockrow__circle"></span>
+              <div class="mockrow__body">
+                <div class="mockrow__title">Turn in essay draft</div>
+                <div class="mockrow__meta">SCHOOL</div>
+              </div>
+              <div class="mockrow__trailing">17:00</div>
+            </div>
+            <div class="mockrow">
+              <span class="mockrow__circle is-done"></span>
+              <div class="mockrow__body">
+                <div class="mockrow__title">Reply to landlord</div>
+                <div class="mockrow__meta">PERSONAL</div>
+              </div>
+              <div class="mockrow__trailing"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="showcase__item" data-panel="upnext">
+          <p class="showcase__num">02</p>
+          <h3 class="showcase__item-title">Up Next</h3>
+          <p class="showcase__item-desc">Everything with a deadline coming up, grouped by how soon, so nothing quietly slips past.</p>
+          <div class="showcase__inline-mock">
+            <div class="mockrow">
+              <span class="mockrow__circle"></span>
+              <div class="mockrow__body">
+                <div class="mockrow__title">Renew certification</div>
+                <div class="mockrow__meta">CERTIFICATIONS</div>
+              </div>
+              <div class="mockrow__trailing">THU</div>
+            </div>
+            <div class="mockrow">
+              <span class="mockrow__circle"></span>
+              <div class="mockrow__body">
+                <div class="mockrow__title">Pay rent</div>
+                <div class="mockrow__meta">PERSONAL</div>
+              </div>
+              <div class="mockrow__trailing">FRI</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="showcase__item" data-panel="timeblock">
+          <p class="showcase__num">03</p>
+          <h3 class="showcase__item-title">Time Block</h3>
+          <p class="showcase__item-desc">Your week, laid out by day, so scheduled blocks never clutter your deadline list.</p>
+          <div class="showcase__inline-mock">
+            <div class="tb-day is-today">
+              <div class="tb-day__label">WEDNESDAY:</div>
+              <div class="tb-day__scroll">
+                <div class="tb-card">
+                  <span class="tb-card__bar" style="background:var(--area-work)"></span>
+                  <div>
+                    <div class="tb-card__time">09:00–09:30</div>
+                    <div class="tb-card__title">Team sync</div>
+                  </div>
+                  <span class="tb-card__check"></span>
+                </div>
+              </div>
+            </div>
+            <div class="tb-day">
+              <div class="tb-day__label">THURSDAY:</div>
+              <div class="tb-day__scroll"></div>
+            </div>
+            <div class="tb-day">
+              <div class="tb-day__label">FRIDAY:</div>
+              <div class="tb-day__scroll">
+                <div class="tb-card">
+                  <span class="tb-card__bar" style="background:var(--area-school)"></span>
+                  <div>
+                    <div class="tb-card__time">17:00–18:30</div>
+                    <div class="tb-card__title">Study group</div>
+                  </div>
+                  <span class="tb-card__check"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="showcase__item" data-panel="widgets">
+          <p class="showcase__num">04</p>
+          <h3 class="showcase__item-title">Home screen widgets</h3>
+          <p class="showcase__item-desc">Agenda, Up Next, and Areas, with tap to complete straight from the widget.</p>
+          <div class="showcase__inline-mock">
+            <div class="widget-mock">
+              <div class="widget-card">
+                <div class="widget-card__header">
+                  <span class="widget-card__label">UP NEXT</span>
+                  <span class="widget-card__count">3 OPEN</span>
+                </div>
+                <div class="widget-row">
+                  <span class="widget-row__bar" style="background:#6E4C6D"></span>
+                  <div class="widget-row__body">
+                    <div class="widget-row__title">Turn in essay draft</div>
+                    <div class="widget-row__meta">TODAY 17:00 · SCHOOL</div>
+                  </div>
+                  <span class="widget-row__check"></span>
+                </div>
+                <div class="widget-row">
+                  <span class="widget-row__bar" style="background:#3F6F6A"></span>
+                  <div class="widget-row__body">
+                    <div class="widget-row__title">Team sync</div>
+                    <div class="widget-row__meta">TOMORROW 09:00 · WORK</div>
+                  </div>
+                  <span class="widget-row__check"></span>
+                </div>
+                <div class="widget-row">
+                  <span class="widget-row__bar" style="background:#8A8175"></span>
+                  <div class="widget-row__body">
+                    <div class="widget-row__title">Water plants</div>
+                    <div class="widget-row__meta">TODAY</div>
+                  </div>
+                  <span class="widget-row__check"></span>
+                </div>
+              </div>
+
+              <div class="widget-card">
+                <div class="widget-card__header">
+                  <span class="widget-card__label">AREAS · THIS WEEK</span>
+                  <span class="widget-card__count" style="color:#1B1917">LV 4</span>
+                </div>
+                <div class="widget-areas__columns">
+                  <div class="widget-areas__col">
+                    <div class="widget-areas__track"><span class="widget-areas__fill" style="width:72%;background:#6E4C6D"></span></div>
+                    <div class="widget-areas__label">SCHOOL 72%</div>
+                  </div>
+                  <div class="widget-areas__col">
+                    <div class="widget-areas__track"><span class="widget-areas__fill" style="width:45%;background:#3F6F6A"></span></div>
+                    <div class="widget-areas__label">WORK 45%</div>
+                  </div>
+                  <div class="widget-areas__col">
+                    <div class="widget-areas__track"><span class="widget-areas__fill" style="width:0%;background:#A4543A"></span></div>
+                    <div class="widget-areas__label is-empty">PERSONAL —</div>
+                  </div>
+                  <div class="widget-areas__col">
+                    <div class="widget-areas__track"><span class="widget-areas__fill" style="width:30%;background:#A07A2C"></span></div>
+                    <div class="widget-areas__label">PROJECTS 30%</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="showcase__item" data-panel="gamification">
+          <p class="showcase__num">05</p>
+          <h3 class="showcase__item-title">Gamification</h3>
+          <p class="showcase__item-desc">Completing tasks earns XP toward a level. Letting something go overdue costs a little back, but what you unlock along the way is yours for good.</p>
+          <div class="showcase__inline-mock">
+            <div class="xp-gauge"><span class="xp-gauge__label">LV 4</span><span class="xp-gauge__track"></span></div>
+          <div class="rewards-grid">
+            <div class="reward-card reward-card--theme">
+              <div class="reward-card__level">ACCENT THEME</div>
+              <div class="reward-card__swatches">
+                <button class="swatch is-active" type="button" data-accent="#A4543A" data-accent-dark="#7E3F2B">
+                  <span class="swatch__dot" style="background:#A4543A"></span>
+                  Base
+                </button>
+                <button class="swatch" type="button" data-accent="#B4586E" data-accent-dark="#94485A">
+                  <span class="swatch__dot" style="background:#B4586E"></span>
+                  Dawn · LV 2
+                </button>
+              </div>
+              <p class="reward-card__hint">This page's accent is one of these. Try the other.</p>
+            </div>
+
+            <div class="reward-card">
+              <div class="reward-card__level">PET · LV 4</div>
+              <svg class="pixel-sprite" viewBox="0 0 10 10" shape-rendering="crispEdges" aria-hidden="true"><rect x="2" y="0" width="1" height="1" fill="#7E3F2B"/><rect x="7" y="0" width="1" height="1" fill="#7E3F2B"/><rect x="1" y="1" width="1" height="1" fill="#7E3F2B"/><rect x="2" y="1" width="1" height="1" fill="#A4543A"/><rect x="3" y="1" width="1" height="1" fill="#7E3F2B"/><rect x="6" y="1" width="1" height="1" fill="#7E3F2B"/><rect x="7" y="1" width="1" height="1" fill="#A4543A"/><rect x="8" y="1" width="1" height="1" fill="#7E3F2B"/><rect x="1" y="2" width="1" height="1" fill="#7E3F2B"/><rect x="2" y="2" width="1" height="1" fill="#A4543A"/><rect x="3" y="2" width="1" height="1" fill="#A4543A"/><rect x="4" y="2" width="1" height="1" fill="#A4543A"/><rect x="5" y="2" width="1" height="1" fill="#A4543A"/><rect x="6" y="2" width="1" height="1" fill="#A4543A"/><rect x="7" y="2" width="1" height="1" fill="#A4543A"/><rect x="8" y="2" width="1" height="1" fill="#7E3F2B"/><rect x="0" y="3" width="1" height="1" fill="#7E3F2B"/><rect x="1" y="3" width="1" height="1" fill="#A4543A"/><rect x="2" y="3" width="1" height="1" fill="#1B1917"/><rect x="3" y="3" width="1" height="1" fill="#A4543A"/><rect x="4" y="3" width="1" height="1" fill="#A4543A"/><rect x="5" y="3" width="1" height="1" fill="#A4543A"/><rect x="6" y="3" width="1" height="1" fill="#A4543A"/><rect x="7" y="3" width="1" height="1" fill="#1B1917"/><rect x="8" y="3" width="1" height="1" fill="#A4543A"/><rect x="9" y="3" width="1" height="1" fill="#7E3F2B"/><rect x="0" y="4" width="1" height="1" fill="#7E3F2B"/><rect x="1" y="4" width="1" height="1" fill="#A4543A"/><rect x="2" y="4" width="1" height="1" fill="#A4543A"/><rect x="3" y="4" width="1" height="1" fill="#F4F1EB"/><rect x="4" y="4" width="1" height="1" fill="#F4F1EB"/><rect x="5" y="4" width="1" height="1" fill="#F4F1EB"/><rect x="6" y="4" width="1" height="1" fill="#F4F1EB"/><rect x="7" y="4" width="1" height="1" fill="#A4543A"/><rect x="8" y="4" width="1" height="1" fill="#A4543A"/><rect x="9" y="4" width="1" height="1" fill="#7E3F2B"/><rect x="1" y="5" width="1" height="1" fill="#7E3F2B"/><rect x="2" y="5" width="1" height="1" fill="#A4543A"/><rect x="3" y="5" width="1" height="1" fill="#F4F1EB"/><rect x="4" y="5" width="1" height="1" fill="#1B1917"/><rect x="5" y="5" width="1" height="1" fill="#1B1917"/><rect x="6" y="5" width="1" height="1" fill="#F4F1EB"/><rect x="7" y="5" width="1" height="1" fill="#A4543A"/><rect x="8" y="5" width="1" height="1" fill="#7E3F2B"/><rect x="1" y="6" width="1" height="1" fill="#7E3F2B"/><rect x="2" y="6" width="1" height="1" fill="#A4543A"/><rect x="3" y="6" width="1" height="1" fill="#F4F1EB"/><rect x="4" y="6" width="1" height="1" fill="#F4F1EB"/><rect x="5" y="6" width="1" height="1" fill="#F4F1EB"/><rect x="6" y="6" width="1" height="1" fill="#F4F1EB"/><rect x="7" y="6" width="1" height="1" fill="#A4543A"/><rect x="8" y="6" width="1" height="1" fill="#7E3F2B"/><rect x="2" y="7" width="1" height="1" fill="#7E3F2B"/><rect x="3" y="7" width="1" height="1" fill="#A4543A"/><rect x="4" y="7" width="1" height="1" fill="#A4543A"/><rect x="5" y="7" width="1" height="1" fill="#A4543A"/><rect x="6" y="7" width="1" height="1" fill="#A4543A"/><rect x="7" y="7" width="1" height="1" fill="#7E3F2B"/><rect x="2" y="8" width="1" height="1" fill="#7E3F2B"/><rect x="3" y="8" width="1" height="1" fill="#F4F1EB"/><rect x="4" y="8" width="1" height="1" fill="#F4F1EB"/><rect x="5" y="8" width="1" height="1" fill="#F4F1EB"/><rect x="6" y="8" width="1" height="1" fill="#F4F1EB"/><rect x="7" y="8" width="1" height="1" fill="#7E3F2B"/><rect x="2" y="9" width="1" height="1" fill="#7E3F2B"/><rect x="3" y="9" width="1" height="1" fill="#7E3F2B"/><rect x="6" y="9" width="1" height="1" fill="#7E3F2B"/><rect x="7" y="9" width="1" height="1" fill="#7E3F2B"/></svg>
+              <div class="reward-card__name">Fox</div>
+            </div>
+
+            <div class="reward-card">
+              <div class="reward-card__level">FURNITURE · LV 5</div>
+              <svg class="pixel-sprite" viewBox="0 0 10 10" shape-rendering="crispEdges" aria-hidden="true"><rect x="3" y="0" width="1" height="1" fill="#A07A2C"/><rect x="4" y="0" width="1" height="1" fill="#A07A2C"/><rect x="5" y="0" width="1" height="1" fill="#A07A2C"/><rect x="6" y="0" width="1" height="1" fill="#A07A2C"/><rect x="2" y="1" width="1" height="1" fill="#A07A2C"/><rect x="3" y="1" width="1" height="1" fill="#A07A2C"/><rect x="4" y="1" width="1" height="1" fill="#E8C88A"/><rect x="5" y="1" width="1" height="1" fill="#E8C88A"/><rect x="6" y="1" width="1" height="1" fill="#A07A2C"/><rect x="7" y="1" width="1" height="1" fill="#A07A2C"/><rect x="1" y="2" width="1" height="1" fill="#A07A2C"/><rect x="2" y="2" width="1" height="1" fill="#A07A2C"/><rect x="3" y="2" width="1" height="1" fill="#E8C88A"/><rect x="4" y="2" width="1" height="1" fill="#E8C88A"/><rect x="5" y="2" width="1" height="1" fill="#E8C88A"/><rect x="6" y="2" width="1" height="1" fill="#E8C88A"/><rect x="7" y="2" width="1" height="1" fill="#A07A2C"/><rect x="8" y="2" width="1" height="1" fill="#A07A2C"/><rect x="0" y="3" width="1" height="1" fill="#A07A2C"/><rect x="1" y="3" width="1" height="1" fill="#A07A2C"/><rect x="2" y="3" width="1" height="1" fill="#E8C88A"/><rect x="3" y="3" width="1" height="1" fill="#E8C88A"/><rect x="4" y="3" width="1" height="1" fill="#E8C88A"/><rect x="5" y="3" width="1" height="1" fill="#E8C88A"/><rect x="6" y="3" width="1" height="1" fill="#E8C88A"/><rect x="7" y="3" width="1" height="1" fill="#E8C88A"/><rect x="8" y="3" width="1" height="1" fill="#A07A2C"/><rect x="9" y="3" width="1" height="1" fill="#A07A2C"/><rect x="4" y="4" width="1" height="1" fill="#1B1917"/><rect x="5" y="4" width="1" height="1" fill="#1B1917"/><rect x="4" y="5" width="1" height="1" fill="#1B1917"/><rect x="5" y="5" width="1" height="1" fill="#1B1917"/><rect x="4" y="6" width="1" height="1" fill="#1B1917"/><rect x="5" y="6" width="1" height="1" fill="#1B1917"/><rect x="4" y="7" width="1" height="1" fill="#1B1917"/><rect x="5" y="7" width="1" height="1" fill="#1B1917"/><rect x="2" y="8" width="1" height="1" fill="#1B1917"/><rect x="3" y="8" width="1" height="1" fill="#1B1917"/><rect x="4" y="8" width="1" height="1" fill="#1B1917"/><rect x="5" y="8" width="1" height="1" fill="#1B1917"/><rect x="6" y="8" width="1" height="1" fill="#1B1917"/><rect x="7" y="8" width="1" height="1" fill="#1B1917"/><rect x="1" y="9" width="1" height="1" fill="#1B1917"/><rect x="2" y="9" width="1" height="1" fill="#1B1917"/><rect x="3" y="9" width="1" height="1" fill="#1B1917"/><rect x="4" y="9" width="1" height="1" fill="#1B1917"/><rect x="5" y="9" width="1" height="1" fill="#1B1917"/><rect x="6" y="9" width="1" height="1" fill="#1B1917"/><rect x="7" y="9" width="1" height="1" fill="#1B1917"/><rect x="8" y="9" width="1" height="1" fill="#1B1917"/></svg>
+              <div class="reward-card__name">Reading lamp</div>
+            </div>
+
+            <div class="reward-card">
+              <div class="reward-card__level">PET · LV 7</div>
+              <svg class="pixel-sprite" viewBox="0 0 10 10" shape-rendering="crispEdges" aria-hidden="true"><rect x="2" y="0" width="1" height="1" fill="#33404F"/><rect x="3" y="0" width="1" height="1" fill="#4A5A70"/><rect x="6" y="0" width="1" height="1" fill="#4A5A70"/><rect x="7" y="0" width="1" height="1" fill="#33404F"/><rect x="1" y="1" width="1" height="1" fill="#33404F"/><rect x="2" y="1" width="1" height="1" fill="#4A5A70"/><rect x="3" y="1" width="1" height="1" fill="#4A5A70"/><rect x="4" y="1" width="1" height="1" fill="#4A5A70"/><rect x="5" y="1" width="1" height="1" fill="#4A5A70"/><rect x="6" y="1" width="1" height="1" fill="#4A5A70"/><rect x="7" y="1" width="1" height="1" fill="#4A5A70"/><rect x="8" y="1" width="1" height="1" fill="#33404F"/><rect x="0" y="2" width="1" height="1" fill="#33404F"/><rect x="1" y="2" width="1" height="1" fill="#4A5A70"/><rect x="2" y="2" width="1" height="1" fill="#F4F1EB"/><rect x="3" y="2" width="1" height="1" fill="#F4F1EB"/><rect x="4" y="2" width="1" height="1" fill="#4A5A70"/><rect x="5" y="2" width="1" height="1" fill="#4A5A70"/><rect x="6" y="2" width="1" height="1" fill="#F4F1EB"/><rect x="7" y="2" width="1" height="1" fill="#F4F1EB"/><rect x="8" y="2" width="1" height="1" fill="#4A5A70"/><rect x="9" y="2" width="1" height="1" fill="#33404F"/><rect x="0" y="3" width="1" height="1" fill="#33404F"/><rect x="1" y="3" width="1" height="1" fill="#4A5A70"/><rect x="2" y="3" width="1" height="1" fill="#F4F1EB"/><rect x="3" y="3" width="1" height="1" fill="#1B1917"/><rect x="4" y="3" width="1" height="1" fill="#F4F1EB"/><rect x="5" y="3" width="1" height="1" fill="#F4F1EB"/><rect x="6" y="3" width="1" height="1" fill="#1B1917"/><rect x="7" y="3" width="1" height="1" fill="#F4F1EB"/><rect x="8" y="3" width="1" height="1" fill="#4A5A70"/><rect x="9" y="3" width="1" height="1" fill="#33404F"/><rect x="0" y="4" width="1" height="1" fill="#33404F"/><rect x="1" y="4" width="1" height="1" fill="#4A5A70"/><rect x="2" y="4" width="1" height="1" fill="#4A5A70"/><rect x="3" y="4" width="1" height="1" fill="#F4F1EB"/><rect x="4" y="4" width="1" height="1" fill="#A07A2C"/><rect x="5" y="4" width="1" height="1" fill="#A07A2C"/><rect x="6" y="4" width="1" height="1" fill="#F4F1EB"/><rect x="7" y="4" width="1" height="1" fill="#4A5A70"/><rect x="8" y="4" width="1" height="1" fill="#4A5A70"/><rect x="9" y="4" width="1" height="1" fill="#33404F"/><rect x="0" y="5" width="1" height="1" fill="#33404F"/><rect x="1" y="5" width="1" height="1" fill="#4A5A70"/><rect x="2" y="5" width="1" height="1" fill="#4A5A70"/><rect x="3" y="5" width="1" height="1" fill="#4A5A70"/><rect x="4" y="5" width="1" height="1" fill="#F4F1EB"/><rect x="5" y="5" width="1" height="1" fill="#F4F1EB"/><rect x="6" y="5" width="1" height="1" fill="#4A5A70"/><rect x="7" y="5" width="1" height="1" fill="#4A5A70"/><rect x="8" y="5" width="1" height="1" fill="#4A5A70"/><rect x="9" y="5" width="1" height="1" fill="#33404F"/><rect x="1" y="6" width="1" height="1" fill="#33404F"/><rect x="2" y="6" width="1" height="1" fill="#4A5A70"/><rect x="3" y="6" width="1" height="1" fill="#F4F1EB"/><rect x="4" y="6" width="1" height="1" fill="#F4F1EB"/><rect x="5" y="6" width="1" height="1" fill="#F4F1EB"/><rect x="6" y="6" width="1" height="1" fill="#F4F1EB"/><rect x="7" y="6" width="1" height="1" fill="#4A5A70"/><rect x="8" y="6" width="1" height="1" fill="#33404F"/><rect x="1" y="7" width="1" height="1" fill="#33404F"/><rect x="2" y="7" width="1" height="1" fill="#4A5A70"/><rect x="3" y="7" width="1" height="1" fill="#F4F1EB"/><rect x="4" y="7" width="1" height="1" fill="#F4F1EB"/><rect x="5" y="7" width="1" height="1" fill="#F4F1EB"/><rect x="6" y="7" width="1" height="1" fill="#F4F1EB"/><rect x="7" y="7" width="1" height="1" fill="#4A5A70"/><rect x="8" y="7" width="1" height="1" fill="#33404F"/><rect x="2" y="8" width="1" height="1" fill="#33404F"/><rect x="3" y="8" width="1" height="1" fill="#4A5A70"/><rect x="4" y="8" width="1" height="1" fill="#4A5A70"/><rect x="5" y="8" width="1" height="1" fill="#4A5A70"/><rect x="6" y="8" width="1" height="1" fill="#4A5A70"/><rect x="7" y="8" width="1" height="1" fill="#33404F"/><rect x="2" y="9" width="1" height="1" fill="#A07A2C"/><rect x="3" y="9" width="1" height="1" fill="#A07A2C"/><rect x="6" y="9" width="1" height="1" fill="#A07A2C"/><rect x="7" y="9" width="1" height="1" fill="#A07A2C"/></svg>
+              <div class="reward-card__name">Owl</div>
+            </div>
+
+            <div class="reward-card">
+              <div class="reward-card__level">FURNITURE · LV 8</div>
+              <svg class="pixel-sprite" viewBox="0 0 10 10" shape-rendering="crispEdges" aria-hidden="true"><rect x="3" y="0" width="1" height="1" fill="#3F6F6A"/><rect x="6" y="0" width="1" height="1" fill="#3F6F6A"/><rect x="2" y="1" width="1" height="1" fill="#3F6F6A"/><rect x="3" y="1" width="1" height="1" fill="#2A4E4A"/><rect x="4" y="1" width="1" height="1" fill="#3F6F6A"/><rect x="5" y="1" width="1" height="1" fill="#3F6F6A"/><rect x="6" y="1" width="1" height="1" fill="#2A4E4A"/><rect x="7" y="1" width="1" height="1" fill="#3F6F6A"/><rect x="1" y="2" width="1" height="1" fill="#3F6F6A"/><rect x="2" y="2" width="1" height="1" fill="#2A4E4A"/><rect x="3" y="2" width="1" height="1" fill="#3F6F6A"/><rect x="4" y="2" width="1" height="1" fill="#2A4E4A"/><rect x="5" y="2" width="1" height="1" fill="#2A4E4A"/><rect x="6" y="2" width="1" height="1" fill="#3F6F6A"/><rect x="7" y="2" width="1" height="1" fill="#2A4E4A"/><rect x="8" y="2" width="1" height="1" fill="#3F6F6A"/><rect x="0" y="3" width="1" height="1" fill="#3F6F6A"/><rect x="1" y="3" width="1" height="1" fill="#2A4E4A"/><rect x="2" y="3" width="1" height="1" fill="#3F6F6A"/><rect x="3" y="3" width="1" height="1" fill="#2A4E4A"/><rect x="4" y="3" width="1" height="1" fill="#3F6F6A"/><rect x="5" y="3" width="1" height="1" fill="#3F6F6A"/><rect x="6" y="3" width="1" height="1" fill="#2A4E4A"/><rect x="7" y="3" width="1" height="1" fill="#3F6F6A"/><rect x="8" y="3" width="1" height="1" fill="#2A4E4A"/><rect x="9" y="3" width="1" height="1" fill="#3F6F6A"/><rect x="1" y="4" width="1" height="1" fill="#3F6F6A"/><rect x="2" y="4" width="1" height="1" fill="#2A4E4A"/><rect x="3" y="4" width="1" height="1" fill="#3F6F6A"/><rect x="4" y="4" width="1" height="1" fill="#2A4E4A"/><rect x="5" y="4" width="1" height="1" fill="#2A4E4A"/><rect x="6" y="4" width="1" height="1" fill="#3F6F6A"/><rect x="7" y="4" width="1" height="1" fill="#2A4E4A"/><rect x="8" y="4" width="1" height="1" fill="#3F6F6A"/><rect x="2" y="5" width="1" height="1" fill="#2A4E4A"/><rect x="3" y="5" width="1" height="1" fill="#3F6F6A"/><rect x="4" y="5" width="1" height="1" fill="#2A4E4A"/><rect x="5" y="5" width="1" height="1" fill="#2A4E4A"/><rect x="6" y="5" width="1" height="1" fill="#3F6F6A"/><rect x="7" y="5" width="1" height="1" fill="#2A4E4A"/><rect x="3" y="6" width="1" height="1" fill="#2A4E4A"/><rect x="4" y="6" width="1" height="1" fill="#3F6F6A"/><rect x="5" y="6" width="1" height="1" fill="#3F6F6A"/><rect x="6" y="6" width="1" height="1" fill="#2A4E4A"/><rect x="1" y="7" width="1" height="1" fill="#7E3F2B"/><rect x="2" y="7" width="1" height="1" fill="#A4543A"/><rect x="3" y="7" width="1" height="1" fill="#A4543A"/><rect x="4" y="7" width="1" height="1" fill="#A4543A"/><rect x="5" y="7" width="1" height="1" fill="#A4543A"/><rect x="6" y="7" width="1" height="1" fill="#A4543A"/><rect x="7" y="7" width="1" height="1" fill="#A4543A"/><rect x="8" y="7" width="1" height="1" fill="#7E3F2B"/><rect x="2" y="8" width="1" height="1" fill="#7E3F2B"/><rect x="3" y="8" width="1" height="1" fill="#A4543A"/><rect x="4" y="8" width="1" height="1" fill="#A4543A"/><rect x="5" y="8" width="1" height="1" fill="#A4543A"/><rect x="6" y="8" width="1" height="1" fill="#A4543A"/><rect x="7" y="8" width="1" height="1" fill="#7E3F2B"/><rect x="3" y="9" width="1" height="1" fill="#7E3F2B"/><rect x="4" y="9" width="1" height="1" fill="#7E3F2B"/><rect x="5" y="9" width="1" height="1" fill="#7E3F2B"/><rect x="6" y="9" width="1" height="1" fill="#7E3F2B"/></svg>
+              <div class="reward-card__name">Potted fern</div>
+            </div>
+
+            <div class="reward-card">
+              <div class="reward-card__level">PET · LV 10</div>
+              <svg class="pixel-sprite" viewBox="0 0 10 10" shape-rendering="crispEdges" aria-hidden="true"><rect x="2" y="0" width="1" height="1" fill="#7A5B47"/><rect x="7" y="0" width="1" height="1" fill="#7A5B47"/><rect x="1" y="1" width="1" height="1" fill="#7A5B47"/><rect x="2" y="1" width="1" height="1" fill="#7A5B47"/><rect x="3" y="1" width="1" height="1" fill="#7A5B47"/><rect x="4" y="1" width="1" height="1" fill="#7A5B47"/><rect x="5" y="1" width="1" height="1" fill="#7A5B47"/><rect x="6" y="1" width="1" height="1" fill="#7A5B47"/><rect x="7" y="1" width="1" height="1" fill="#7A5B47"/><rect x="8" y="1" width="1" height="1" fill="#7A5B47"/><rect x="0" y="2" width="1" height="1" fill="#7A5B47"/><rect x="1" y="2" width="1" height="1" fill="#7A5B47"/><rect x="2" y="2" width="1" height="1" fill="#1B1917"/><rect x="3" y="2" width="1" height="1" fill="#7A5B47"/><rect x="4" y="2" width="1" height="1" fill="#7A5B47"/><rect x="5" y="2" width="1" height="1" fill="#7A5B47"/><rect x="6" y="2" width="1" height="1" fill="#7A5B47"/><rect x="7" y="2" width="1" height="1" fill="#1B1917"/><rect x="8" y="2" width="1" height="1" fill="#7A5B47"/><rect x="9" y="2" width="1" height="1" fill="#7A5B47"/><rect x="0" y="3" width="1" height="1" fill="#7A5B47"/><rect x="1" y="3" width="1" height="1" fill="#7A5B47"/><rect x="2" y="3" width="1" height="1" fill="#7A5B47"/><rect x="3" y="3" width="1" height="1" fill="#A98B72"/><rect x="4" y="3" width="1" height="1" fill="#A98B72"/><rect x="5" y="3" width="1" height="1" fill="#A98B72"/><rect x="6" y="3" width="1" height="1" fill="#A98B72"/><rect x="7" y="3" width="1" height="1" fill="#7A5B47"/><rect x="8" y="3" width="1" height="1" fill="#7A5B47"/><rect x="9" y="3" width="1" height="1" fill="#7A5B47"/><rect x="0" y="4" width="1" height="1" fill="#7A5B47"/><rect x="1" y="4" width="1" height="1" fill="#7A5B47"/><rect x="2" y="4" width="1" height="1" fill="#A98B72"/><rect x="3" y="4" width="1" height="1" fill="#A98B72"/><rect x="4" y="4" width="1" height="1" fill="#1B1917"/><rect x="5" y="4" width="1" height="1" fill="#1B1917"/><rect x="6" y="4" width="1" height="1" fill="#A98B72"/><rect x="7" y="4" width="1" height="1" fill="#A98B72"/><rect x="8" y="4" width="1" height="1" fill="#7A5B47"/><rect x="9" y="4" width="1" height="1" fill="#7A5B47"/><rect x="1" y="5" width="1" height="1" fill="#7A5B47"/><rect x="2" y="5" width="1" height="1" fill="#A98B72"/><rect x="3" y="5" width="1" height="1" fill="#A98B72"/><rect x="4" y="5" width="1" height="1" fill="#A98B72"/><rect x="5" y="5" width="1" height="1" fill="#A98B72"/><rect x="6" y="5" width="1" height="1" fill="#A98B72"/><rect x="7" y="5" width="1" height="1" fill="#A98B72"/><rect x="8" y="5" width="1" height="1" fill="#7A5B47"/><rect x="1" y="6" width="1" height="1" fill="#7A5B47"/><rect x="2" y="6" width="1" height="1" fill="#A98B72"/><rect x="3" y="6" width="1" height="1" fill="#A98B72"/><rect x="4" y="6" width="1" height="1" fill="#A98B72"/><rect x="5" y="6" width="1" height="1" fill="#A98B72"/><rect x="6" y="6" width="1" height="1" fill="#A98B72"/><rect x="7" y="6" width="1" height="1" fill="#A98B72"/><rect x="8" y="6" width="1" height="1" fill="#7A5B47"/><rect x="2" y="7" width="1" height="1" fill="#7A5B47"/><rect x="3" y="7" width="1" height="1" fill="#A98B72"/><rect x="4" y="7" width="1" height="1" fill="#A98B72"/><rect x="5" y="7" width="1" height="1" fill="#A98B72"/><rect x="6" y="7" width="1" height="1" fill="#A98B72"/><rect x="7" y="7" width="1" height="1" fill="#7A5B47"/><rect x="2" y="8" width="1" height="1" fill="#7A5B47"/><rect x="3" y="8" width="1" height="1" fill="#A98B72"/><rect x="4" y="8" width="1" height="1" fill="#A98B72"/><rect x="5" y="8" width="1" height="1" fill="#A98B72"/><rect x="6" y="8" width="1" height="1" fill="#A98B72"/><rect x="7" y="8" width="1" height="1" fill="#7A5B47"/><rect x="2" y="9" width="1" height="1" fill="#A98B72"/><rect x="3" y="9" width="1" height="1" fill="#A98B72"/><rect x="6" y="9" width="1" height="1" fill="#A98B72"/><rect x="7" y="9" width="1" height="1" fill="#A98B72"/></svg>
+              <div class="reward-card__name">Otter</div>
+            </div>
+          </div>
+          </div>
+        </div>
+
+        <div class="showcase__item" data-panel="applock">
+          <p class="showcase__num">06</p>
+          <h3 class="showcase__item-title">App Lock</h3>
+          <p class="showcase__item-desc">Optional PIN or biometric lock on the app itself.</p>
+          <div class="showcase__inline-mock">
+            <div class="lock-preview">
+              <svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" aria-hidden="true">
+                <path d="M12 3.5c3.9 0 7 3.1 7 7v2c0 1.9-.3 3.7-1 5.3"/>
+                <path d="M12 3.5c-3.9 0-7 3.1-7 7v2c0 1 .1 2.1.4 3.2"/>
+                <path d="M12 7.2c2.6 0 4.7 2.1 4.7 4.7v1.6c0 1.6-.3 3.1-.9 4.5"/>
+                <path d="M12 7.2c-2.6 0-4.7 2.1-4.7 4.7v2c0 2.3.6 4.5 1.7 6.4"/>
+                <path d="M12 10.8c1.4 0 2.6 1.1 2.6 2.6v1.1c0 1.6-.4 3.1-1.1 4.5"/>
+                <path d="M9.6 14.5c0-1.4 1.1-2.6 2.4-2.6"/>
+                <path d="M9.9 19.4c-.6-1-1-2.1-1.2-3.3"/>
+              </svg>
+              <div class="preview-lock"><span></span><span></span><span></span><span></span></div>
+            </div>
+            <p class="preview-caption">Locked with a PIN/biometric on launch</p>
+          </div>
+        </div>
+
+        <div class="showcase__item" data-panel="calendar">
+          <p class="showcase__num">07</p>
+          <h3 class="showcase__item-title">Google Calendar</h3>
+          <p class="showcase__item-desc">Optional, off by default. See the <a href="privacy.html">privacy policy</a> for exactly what it can access.</p>
+          <div class="showcase__inline-mock">
+            <div class="cal-settings">
+              <div class="cal-settings__row">
+                <span class="cal-settings__dot"></span>
+                <span class="cal-settings__email">you@gmail.com</span>
+              </div>
+              <div class="cal-settings__toggle-row">
+                <span class="cal-settings__label">Import events</span>
+                <span class="mini-switch"></span>
+              </div>
+              <div class="cal-settings__export-row">
+                <span class="cal-settings__label">Export</span>
+                <div class="cal-settings__export-options">
+                  <span class="cal-pill is-active">ASK</span>
+                  <span class="cal-pill">ALWAYS</span>
+                  <span class="cal-pill">NEVER</span>
+                </div>
+              </div>
+              <div class="cal-settings__meta">Last synced: Aug 2, 9:14 AM</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="showcase__item" data-panel="export">
+          <p class="showcase__num">08</p>
+          <h3 class="showcase__item-title">Export and import</h3>
+          <p class="showcase__item-desc">Back up or move your data manually as JSON, since there's no cloud backup.</p>
+          <div class="showcase__inline-mock">
+            <div class="preview-export">cove-export-2026-08-03.json</div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="showcase__display">
+        <div class="showcase__panel is-active" data-panel="today">
+          <div class="mockrow">
+            <span class="mockrow__circle"></span>
+            <div class="mockrow__body">
+              <div class="mockrow__title">Turn in essay draft</div>
+              <div class="mockrow__meta">SCHOOL</div>
+            </div>
+            <div class="mockrow__trailing">17:00</div>
+          </div>
+          <div class="mockrow">
+            <span class="mockrow__circle is-done"></span>
+            <div class="mockrow__body">
+              <div class="mockrow__title">Reply to landlord</div>
+              <div class="mockrow__meta">PERSONAL</div>
+            </div>
+            <div class="mockrow__trailing"></div>
+          </div>
+        </div>
+
+        <div class="showcase__panel" data-panel="upnext">
+          <div class="mockrow">
+            <span class="mockrow__circle"></span>
+            <div class="mockrow__body">
+              <div class="mockrow__title">Renew certification</div>
+              <div class="mockrow__meta">CERTIFICATIONS</div>
+            </div>
+            <div class="mockrow__trailing">THU</div>
+          </div>
+          <div class="mockrow">
+            <span class="mockrow__circle"></span>
+            <div class="mockrow__body">
+              <div class="mockrow__title">Pay rent</div>
+              <div class="mockrow__meta">PERSONAL</div>
+            </div>
+            <div class="mockrow__trailing">FRI</div>
+          </div>
+        </div>
+
+        <div class="showcase__panel" data-panel="timeblock">
+          <div class="tb-day is-today">
+            <div class="tb-day__label">WEDNESDAY:</div>
+            <div class="tb-day__scroll">
+              <div class="tb-card">
+                <span class="tb-card__bar" style="background:var(--area-work)"></span>
+                <div>
+                  <div class="tb-card__time">09:00–09:30</div>
+                  <div class="tb-card__title">Team sync</div>
+                </div>
+                <span class="tb-card__check"></span>
+              </div>
+            </div>
+          </div>
+          <div class="tb-day">
+            <div class="tb-day__label">THURSDAY:</div>
+            <div class="tb-day__scroll"></div>
+          </div>
+          <div class="tb-day">
+            <div class="tb-day__label">FRIDAY:</div>
+            <div class="tb-day__scroll">
+              <div class="tb-card">
+                <span class="tb-card__bar" style="background:var(--area-school)"></span>
+                <div>
+                  <div class="tb-card__time">17:00–18:30</div>
+                  <div class="tb-card__title">Study group</div>
+                </div>
+                <span class="tb-card__check"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="showcase__panel" data-panel="widgets">
+          <div class="widget-mock">
+            <div class="widget-card">
+              <div class="widget-card__header">
+                <span class="widget-card__label">UP NEXT</span>
+                <span class="widget-card__count">3 OPEN</span>
+              </div>
+              <div class="widget-row">
+                <span class="widget-row__bar" style="background:#6E4C6D"></span>
+                <div class="widget-row__body">
+                  <div class="widget-row__title">Turn in essay draft</div>
+                  <div class="widget-row__meta">TODAY 17:00 · SCHOOL</div>
+                </div>
+                <span class="widget-row__check"></span>
+              </div>
+              <div class="widget-row">
+                <span class="widget-row__bar" style="background:#3F6F6A"></span>
+                <div class="widget-row__body">
+                  <div class="widget-row__title">Team sync</div>
+                  <div class="widget-row__meta">TOMORROW 09:00 · WORK</div>
+                </div>
+                <span class="widget-row__check"></span>
+              </div>
+              <div class="widget-row">
+                <span class="widget-row__bar" style="background:#8A8175"></span>
+                <div class="widget-row__body">
+                  <div class="widget-row__title">Water plants</div>
+                  <div class="widget-row__meta">TODAY</div>
+                </div>
+                <span class="widget-row__check"></span>
+              </div>
+            </div>
+
+            <div class="widget-card">
+              <div class="widget-card__header">
+                <span class="widget-card__label">AREAS · THIS WEEK</span>
+                <span class="widget-card__count" style="color:#1B1917">LV 4</span>
+              </div>
+              <div class="widget-areas__columns">
+                <div class="widget-areas__col">
+                  <div class="widget-areas__track"><span class="widget-areas__fill" style="width:72%;background:#6E4C6D"></span></div>
+                  <div class="widget-areas__label">SCHOOL 72%</div>
+                </div>
+                <div class="widget-areas__col">
+                  <div class="widget-areas__track"><span class="widget-areas__fill" style="width:45%;background:#3F6F6A"></span></div>
+                  <div class="widget-areas__label">WORK 45%</div>
+                </div>
+                <div class="widget-areas__col">
+                  <div class="widget-areas__track"><span class="widget-areas__fill" style="width:0%;background:#A4543A"></span></div>
+                  <div class="widget-areas__label is-empty">PERSONAL —</div>
+                </div>
+                <div class="widget-areas__col">
+                  <div class="widget-areas__track"><span class="widget-areas__fill" style="width:30%;background:#A07A2C"></span></div>
+                  <div class="widget-areas__label">PROJECTS 30%</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="showcase__panel" data-panel="gamification">
+          <div class="xp-gauge"><span class="xp-gauge__label">LV 4</span><span class="xp-gauge__track"></span></div>
+          <div class="rewards-grid">
+            <div class="reward-card reward-card--theme">
+              <div class="reward-card__level">ACCENT THEME</div>
+              <div class="reward-card__swatches">
+                <button class="swatch is-active" type="button" data-accent="#A4543A" data-accent-dark="#7E3F2B">
+                  <span class="swatch__dot" style="background:#A4543A"></span>
+                  Base
+                </button>
+                <button class="swatch" type="button" data-accent="#B4586E" data-accent-dark="#94485A">
+                  <span class="swatch__dot" style="background:#B4586E"></span>
+                  Dawn · LV 2
+                </button>
+              </div>
+              <p class="reward-card__hint">This page's accent is one of these. Try the other.</p>
+            </div>
+
+            <div class="reward-card">
+              <div class="reward-card__level">PET · LV 4</div>
+              <svg class="pixel-sprite" viewBox="0 0 10 10" shape-rendering="crispEdges" aria-hidden="true"><rect x="2" y="0" width="1" height="1" fill="#7E3F2B"/><rect x="7" y="0" width="1" height="1" fill="#7E3F2B"/><rect x="1" y="1" width="1" height="1" fill="#7E3F2B"/><rect x="2" y="1" width="1" height="1" fill="#A4543A"/><rect x="3" y="1" width="1" height="1" fill="#7E3F2B"/><rect x="6" y="1" width="1" height="1" fill="#7E3F2B"/><rect x="7" y="1" width="1" height="1" fill="#A4543A"/><rect x="8" y="1" width="1" height="1" fill="#7E3F2B"/><rect x="1" y="2" width="1" height="1" fill="#7E3F2B"/><rect x="2" y="2" width="1" height="1" fill="#A4543A"/><rect x="3" y="2" width="1" height="1" fill="#A4543A"/><rect x="4" y="2" width="1" height="1" fill="#A4543A"/><rect x="5" y="2" width="1" height="1" fill="#A4543A"/><rect x="6" y="2" width="1" height="1" fill="#A4543A"/><rect x="7" y="2" width="1" height="1" fill="#A4543A"/><rect x="8" y="2" width="1" height="1" fill="#7E3F2B"/><rect x="0" y="3" width="1" height="1" fill="#7E3F2B"/><rect x="1" y="3" width="1" height="1" fill="#A4543A"/><rect x="2" y="3" width="1" height="1" fill="#1B1917"/><rect x="3" y="3" width="1" height="1" fill="#A4543A"/><rect x="4" y="3" width="1" height="1" fill="#A4543A"/><rect x="5" y="3" width="1" height="1" fill="#A4543A"/><rect x="6" y="3" width="1" height="1" fill="#A4543A"/><rect x="7" y="3" width="1" height="1" fill="#1B1917"/><rect x="8" y="3" width="1" height="1" fill="#A4543A"/><rect x="9" y="3" width="1" height="1" fill="#7E3F2B"/><rect x="0" y="4" width="1" height="1" fill="#7E3F2B"/><rect x="1" y="4" width="1" height="1" fill="#A4543A"/><rect x="2" y="4" width="1" height="1" fill="#A4543A"/><rect x="3" y="4" width="1" height="1" fill="#F4F1EB"/><rect x="4" y="4" width="1" height="1" fill="#F4F1EB"/><rect x="5" y="4" width="1" height="1" fill="#F4F1EB"/><rect x="6" y="4" width="1" height="1" fill="#F4F1EB"/><rect x="7" y="4" width="1" height="1" fill="#A4543A"/><rect x="8" y="4" width="1" height="1" fill="#A4543A"/><rect x="9" y="4" width="1" height="1" fill="#7E3F2B"/><rect x="1" y="5" width="1" height="1" fill="#7E3F2B"/><rect x="2" y="5" width="1" height="1" fill="#A4543A"/><rect x="3" y="5" width="1" height="1" fill="#F4F1EB"/><rect x="4" y="5" width="1" height="1" fill="#1B1917"/><rect x="5" y="5" width="1" height="1" fill="#1B1917"/><rect x="6" y="5" width="1" height="1" fill="#F4F1EB"/><rect x="7" y="5" width="1" height="1" fill="#A4543A"/><rect x="8" y="5" width="1" height="1" fill="#7E3F2B"/><rect x="1" y="6" width="1" height="1" fill="#7E3F2B"/><rect x="2" y="6" width="1" height="1" fill="#A4543A"/><rect x="3" y="6" width="1" height="1" fill="#F4F1EB"/><rect x="4" y="6" width="1" height="1" fill="#F4F1EB"/><rect x="5" y="6" width="1" height="1" fill="#F4F1EB"/><rect x="6" y="6" width="1" height="1" fill="#F4F1EB"/><rect x="7" y="6" width="1" height="1" fill="#A4543A"/><rect x="8" y="6" width="1" height="1" fill="#7E3F2B"/><rect x="2" y="7" width="1" height="1" fill="#7E3F2B"/><rect x="3" y="7" width="1" height="1" fill="#A4543A"/><rect x="4" y="7" width="1" height="1" fill="#A4543A"/><rect x="5" y="7" width="1" height="1" fill="#A4543A"/><rect x="6" y="7" width="1" height="1" fill="#A4543A"/><rect x="7" y="7" width="1" height="1" fill="#7E3F2B"/><rect x="2" y="8" width="1" height="1" fill="#7E3F2B"/><rect x="3" y="8" width="1" height="1" fill="#F4F1EB"/><rect x="4" y="8" width="1" height="1" fill="#F4F1EB"/><rect x="5" y="8" width="1" height="1" fill="#F4F1EB"/><rect x="6" y="8" width="1" height="1" fill="#F4F1EB"/><rect x="7" y="8" width="1" height="1" fill="#7E3F2B"/><rect x="2" y="9" width="1" height="1" fill="#7E3F2B"/><rect x="3" y="9" width="1" height="1" fill="#7E3F2B"/><rect x="6" y="9" width="1" height="1" fill="#7E3F2B"/><rect x="7" y="9" width="1" height="1" fill="#7E3F2B"/></svg>
+              <div class="reward-card__name">Fox</div>
+            </div>
+
+            <div class="reward-card">
+              <div class="reward-card__level">FURNITURE · LV 5</div>
+              <svg class="pixel-sprite" viewBox="0 0 10 10" shape-rendering="crispEdges" aria-hidden="true"><rect x="3" y="0" width="1" height="1" fill="#A07A2C"/><rect x="4" y="0" width="1" height="1" fill="#A07A2C"/><rect x="5" y="0" width="1" height="1" fill="#A07A2C"/><rect x="6" y="0" width="1" height="1" fill="#A07A2C"/><rect x="2" y="1" width="1" height="1" fill="#A07A2C"/><rect x="3" y="1" width="1" height="1" fill="#A07A2C"/><rect x="4" y="1" width="1" height="1" fill="#E8C88A"/><rect x="5" y="1" width="1" height="1" fill="#E8C88A"/><rect x="6" y="1" width="1" height="1" fill="#A07A2C"/><rect x="7" y="1" width="1" height="1" fill="#A07A2C"/><rect x="1" y="2" width="1" height="1" fill="#A07A2C"/><rect x="2" y="2" width="1" height="1" fill="#A07A2C"/><rect x="3" y="2" width="1" height="1" fill="#E8C88A"/><rect x="4" y="2" width="1" height="1" fill="#E8C88A"/><rect x="5" y="2" width="1" height="1" fill="#E8C88A"/><rect x="6" y="2" width="1" height="1" fill="#E8C88A"/><rect x="7" y="2" width="1" height="1" fill="#A07A2C"/><rect x="8" y="2" width="1" height="1" fill="#A07A2C"/><rect x="0" y="3" width="1" height="1" fill="#A07A2C"/><rect x="1" y="3" width="1" height="1" fill="#A07A2C"/><rect x="2" y="3" width="1" height="1" fill="#E8C88A"/><rect x="3" y="3" width="1" height="1" fill="#E8C88A"/><rect x="4" y="3" width="1" height="1" fill="#E8C88A"/><rect x="5" y="3" width="1" height="1" fill="#E8C88A"/><rect x="6" y="3" width="1" height="1" fill="#E8C88A"/><rect x="7" y="3" width="1" height="1" fill="#E8C88A"/><rect x="8" y="3" width="1" height="1" fill="#A07A2C"/><rect x="9" y="3" width="1" height="1" fill="#A07A2C"/><rect x="4" y="4" width="1" height="1" fill="#1B1917"/><rect x="5" y="4" width="1" height="1" fill="#1B1917"/><rect x="4" y="5" width="1" height="1" fill="#1B1917"/><rect x="5" y="5" width="1" height="1" fill="#1B1917"/><rect x="4" y="6" width="1" height="1" fill="#1B1917"/><rect x="5" y="6" width="1" height="1" fill="#1B1917"/><rect x="4" y="7" width="1" height="1" fill="#1B1917"/><rect x="5" y="7" width="1" height="1" fill="#1B1917"/><rect x="2" y="8" width="1" height="1" fill="#1B1917"/><rect x="3" y="8" width="1" height="1" fill="#1B1917"/><rect x="4" y="8" width="1" height="1" fill="#1B1917"/><rect x="5" y="8" width="1" height="1" fill="#1B1917"/><rect x="6" y="8" width="1" height="1" fill="#1B1917"/><rect x="7" y="8" width="1" height="1" fill="#1B1917"/><rect x="1" y="9" width="1" height="1" fill="#1B1917"/><rect x="2" y="9" width="1" height="1" fill="#1B1917"/><rect x="3" y="9" width="1" height="1" fill="#1B1917"/><rect x="4" y="9" width="1" height="1" fill="#1B1917"/><rect x="5" y="9" width="1" height="1" fill="#1B1917"/><rect x="6" y="9" width="1" height="1" fill="#1B1917"/><rect x="7" y="9" width="1" height="1" fill="#1B1917"/><rect x="8" y="9" width="1" height="1" fill="#1B1917"/></svg>
+              <div class="reward-card__name">Reading lamp</div>
+            </div>
+
+            <div class="reward-card">
+              <div class="reward-card__level">PET · LV 7</div>
+              <svg class="pixel-sprite" viewBox="0 0 10 10" shape-rendering="crispEdges" aria-hidden="true"><rect x="2" y="0" width="1" height="1" fill="#33404F"/><rect x="3" y="0" width="1" height="1" fill="#4A5A70"/><rect x="6" y="0" width="1" height="1" fill="#4A5A70"/><rect x="7" y="0" width="1" height="1" fill="#33404F"/><rect x="1" y="1" width="1" height="1" fill="#33404F"/><rect x="2" y="1" width="1" height="1" fill="#4A5A70"/><rect x="3" y="1" width="1" height="1" fill="#4A5A70"/><rect x="4" y="1" width="1" height="1" fill="#4A5A70"/><rect x="5" y="1" width="1" height="1" fill="#4A5A70"/><rect x="6" y="1" width="1" height="1" fill="#4A5A70"/><rect x="7" y="1" width="1" height="1" fill="#4A5A70"/><rect x="8" y="1" width="1" height="1" fill="#33404F"/><rect x="0" y="2" width="1" height="1" fill="#33404F"/><rect x="1" y="2" width="1" height="1" fill="#4A5A70"/><rect x="2" y="2" width="1" height="1" fill="#F4F1EB"/><rect x="3" y="2" width="1" height="1" fill="#F4F1EB"/><rect x="4" y="2" width="1" height="1" fill="#4A5A70"/><rect x="5" y="2" width="1" height="1" fill="#4A5A70"/><rect x="6" y="2" width="1" height="1" fill="#F4F1EB"/><rect x="7" y="2" width="1" height="1" fill="#F4F1EB"/><rect x="8" y="2" width="1" height="1" fill="#4A5A70"/><rect x="9" y="2" width="1" height="1" fill="#33404F"/><rect x="0" y="3" width="1" height="1" fill="#33404F"/><rect x="1" y="3" width="1" height="1" fill="#4A5A70"/><rect x="2" y="3" width="1" height="1" fill="#F4F1EB"/><rect x="3" y="3" width="1" height="1" fill="#1B1917"/><rect x="4" y="3" width="1" height="1" fill="#F4F1EB"/><rect x="5" y="3" width="1" height="1" fill="#F4F1EB"/><rect x="6" y="3" width="1" height="1" fill="#1B1917"/><rect x="7" y="3" width="1" height="1" fill="#F4F1EB"/><rect x="8" y="3" width="1" height="1" fill="#4A5A70"/><rect x="9" y="3" width="1" height="1" fill="#33404F"/><rect x="0" y="4" width="1" height="1" fill="#33404F"/><rect x="1" y="4" width="1" height="1" fill="#4A5A70"/><rect x="2" y="4" width="1" height="1" fill="#4A5A70"/><rect x="3" y="4" width="1" height="1" fill="#F4F1EB"/><rect x="4" y="4" width="1" height="1" fill="#A07A2C"/><rect x="5" y="4" width="1" height="1" fill="#A07A2C"/><rect x="6" y="4" width="1" height="1" fill="#F4F1EB"/><rect x="7" y="4" width="1" height="1" fill="#4A5A70"/><rect x="8" y="4" width="1" height="1" fill="#4A5A70"/><rect x="9" y="4" width="1" height="1" fill="#33404F"/><rect x="0" y="5" width="1" height="1" fill="#33404F"/><rect x="1" y="5" width="1" height="1" fill="#4A5A70"/><rect x="2" y="5" width="1" height="1" fill="#4A5A70"/><rect x="3" y="5" width="1" height="1" fill="#4A5A70"/><rect x="4" y="5" width="1" height="1" fill="#F4F1EB"/><rect x="5" y="5" width="1" height="1" fill="#F4F1EB"/><rect x="6" y="5" width="1" height="1" fill="#4A5A70"/><rect x="7" y="5" width="1" height="1" fill="#4A5A70"/><rect x="8" y="5" width="1" height="1" fill="#4A5A70"/><rect x="9" y="5" width="1" height="1" fill="#33404F"/><rect x="1" y="6" width="1" height="1" fill="#33404F"/><rect x="2" y="6" width="1" height="1" fill="#4A5A70"/><rect x="3" y="6" width="1" height="1" fill="#F4F1EB"/><rect x="4" y="6" width="1" height="1" fill="#F4F1EB"/><rect x="5" y="6" width="1" height="1" fill="#F4F1EB"/><rect x="6" y="6" width="1" height="1" fill="#F4F1EB"/><rect x="7" y="6" width="1" height="1" fill="#4A5A70"/><rect x="8" y="6" width="1" height="1" fill="#33404F"/><rect x="1" y="7" width="1" height="1" fill="#33404F"/><rect x="2" y="7" width="1" height="1" fill="#4A5A70"/><rect x="3" y="7" width="1" height="1" fill="#F4F1EB"/><rect x="4" y="7" width="1" height="1" fill="#F4F1EB"/><rect x="5" y="7" width="1" height="1" fill="#F4F1EB"/><rect x="6" y="7" width="1" height="1" fill="#F4F1EB"/><rect x="7" y="7" width="1" height="1" fill="#4A5A70"/><rect x="8" y="7" width="1" height="1" fill="#33404F"/><rect x="2" y="8" width="1" height="1" fill="#33404F"/><rect x="3" y="8" width="1" height="1" fill="#4A5A70"/><rect x="4" y="8" width="1" height="1" fill="#4A5A70"/><rect x="5" y="8" width="1" height="1" fill="#4A5A70"/><rect x="6" y="8" width="1" height="1" fill="#4A5A70"/><rect x="7" y="8" width="1" height="1" fill="#33404F"/><rect x="2" y="9" width="1" height="1" fill="#A07A2C"/><rect x="3" y="9" width="1" height="1" fill="#A07A2C"/><rect x="6" y="9" width="1" height="1" fill="#A07A2C"/><rect x="7" y="9" width="1" height="1" fill="#A07A2C"/></svg>
+              <div class="reward-card__name">Owl</div>
+            </div>
+
+            <div class="reward-card">
+              <div class="reward-card__level">FURNITURE · LV 8</div>
+              <svg class="pixel-sprite" viewBox="0 0 10 10" shape-rendering="crispEdges" aria-hidden="true"><rect x="3" y="0" width="1" height="1" fill="#3F6F6A"/><rect x="6" y="0" width="1" height="1" fill="#3F6F6A"/><rect x="2" y="1" width="1" height="1" fill="#3F6F6A"/><rect x="3" y="1" width="1" height="1" fill="#2A4E4A"/><rect x="4" y="1" width="1" height="1" fill="#3F6F6A"/><rect x="5" y="1" width="1" height="1" fill="#3F6F6A"/><rect x="6" y="1" width="1" height="1" fill="#2A4E4A"/><rect x="7" y="1" width="1" height="1" fill="#3F6F6A"/><rect x="1" y="2" width="1" height="1" fill="#3F6F6A"/><rect x="2" y="2" width="1" height="1" fill="#2A4E4A"/><rect x="3" y="2" width="1" height="1" fill="#3F6F6A"/><rect x="4" y="2" width="1" height="1" fill="#2A4E4A"/><rect x="5" y="2" width="1" height="1" fill="#2A4E4A"/><rect x="6" y="2" width="1" height="1" fill="#3F6F6A"/><rect x="7" y="2" width="1" height="1" fill="#2A4E4A"/><rect x="8" y="2" width="1" height="1" fill="#3F6F6A"/><rect x="0" y="3" width="1" height="1" fill="#3F6F6A"/><rect x="1" y="3" width="1" height="1" fill="#2A4E4A"/><rect x="2" y="3" width="1" height="1" fill="#3F6F6A"/><rect x="3" y="3" width="1" height="1" fill="#2A4E4A"/><rect x="4" y="3" width="1" height="1" fill="#3F6F6A"/><rect x="5" y="3" width="1" height="1" fill="#3F6F6A"/><rect x="6" y="3" width="1" height="1" fill="#2A4E4A"/><rect x="7" y="3" width="1" height="1" fill="#3F6F6A"/><rect x="8" y="3" width="1" height="1" fill="#2A4E4A"/><rect x="9" y="3" width="1" height="1" fill="#3F6F6A"/><rect x="1" y="4" width="1" height="1" fill="#3F6F6A"/><rect x="2" y="4" width="1" height="1" fill="#2A4E4A"/><rect x="3" y="4" width="1" height="1" fill="#3F6F6A"/><rect x="4" y="4" width="1" height="1" fill="#2A4E4A"/><rect x="5" y="4" width="1" height="1" fill="#2A4E4A"/><rect x="6" y="4" width="1" height="1" fill="#3F6F6A"/><rect x="7" y="4" width="1" height="1" fill="#2A4E4A"/><rect x="8" y="4" width="1" height="1" fill="#3F6F6A"/><rect x="2" y="5" width="1" height="1" fill="#2A4E4A"/><rect x="3" y="5" width="1" height="1" fill="#3F6F6A"/><rect x="4" y="5" width="1" height="1" fill="#2A4E4A"/><rect x="5" y="5" width="1" height="1" fill="#2A4E4A"/><rect x="6" y="5" width="1" height="1" fill="#3F6F6A"/><rect x="7" y="5" width="1" height="1" fill="#2A4E4A"/><rect x="3" y="6" width="1" height="1" fill="#2A4E4A"/><rect x="4" y="6" width="1" height="1" fill="#3F6F6A"/><rect x="5" y="6" width="1" height="1" fill="#3F6F6A"/><rect x="6" y="6" width="1" height="1" fill="#2A4E4A"/><rect x="1" y="7" width="1" height="1" fill="#7E3F2B"/><rect x="2" y="7" width="1" height="1" fill="#A4543A"/><rect x="3" y="7" width="1" height="1" fill="#A4543A"/><rect x="4" y="7" width="1" height="1" fill="#A4543A"/><rect x="5" y="7" width="1" height="1" fill="#A4543A"/><rect x="6" y="7" width="1" height="1" fill="#A4543A"/><rect x="7" y="7" width="1" height="1" fill="#A4543A"/><rect x="8" y="7" width="1" height="1" fill="#7E3F2B"/><rect x="2" y="8" width="1" height="1" fill="#7E3F2B"/><rect x="3" y="8" width="1" height="1" fill="#A4543A"/><rect x="4" y="8" width="1" height="1" fill="#A4543A"/><rect x="5" y="8" width="1" height="1" fill="#A4543A"/><rect x="6" y="8" width="1" height="1" fill="#A4543A"/><rect x="7" y="8" width="1" height="1" fill="#7E3F2B"/><rect x="3" y="9" width="1" height="1" fill="#7E3F2B"/><rect x="4" y="9" width="1" height="1" fill="#7E3F2B"/><rect x="5" y="9" width="1" height="1" fill="#7E3F2B"/><rect x="6" y="9" width="1" height="1" fill="#7E3F2B"/></svg>
+              <div class="reward-card__name">Potted fern</div>
+            </div>
+
+            <div class="reward-card">
+              <div class="reward-card__level">PET · LV 10</div>
+              <svg class="pixel-sprite" viewBox="0 0 10 10" shape-rendering="crispEdges" aria-hidden="true"><rect x="2" y="0" width="1" height="1" fill="#7A5B47"/><rect x="7" y="0" width="1" height="1" fill="#7A5B47"/><rect x="1" y="1" width="1" height="1" fill="#7A5B47"/><rect x="2" y="1" width="1" height="1" fill="#7A5B47"/><rect x="3" y="1" width="1" height="1" fill="#7A5B47"/><rect x="4" y="1" width="1" height="1" fill="#7A5B47"/><rect x="5" y="1" width="1" height="1" fill="#7A5B47"/><rect x="6" y="1" width="1" height="1" fill="#7A5B47"/><rect x="7" y="1" width="1" height="1" fill="#7A5B47"/><rect x="8" y="1" width="1" height="1" fill="#7A5B47"/><rect x="0" y="2" width="1" height="1" fill="#7A5B47"/><rect x="1" y="2" width="1" height="1" fill="#7A5B47"/><rect x="2" y="2" width="1" height="1" fill="#1B1917"/><rect x="3" y="2" width="1" height="1" fill="#7A5B47"/><rect x="4" y="2" width="1" height="1" fill="#7A5B47"/><rect x="5" y="2" width="1" height="1" fill="#7A5B47"/><rect x="6" y="2" width="1" height="1" fill="#7A5B47"/><rect x="7" y="2" width="1" height="1" fill="#1B1917"/><rect x="8" y="2" width="1" height="1" fill="#7A5B47"/><rect x="9" y="2" width="1" height="1" fill="#7A5B47"/><rect x="0" y="3" width="1" height="1" fill="#7A5B47"/><rect x="1" y="3" width="1" height="1" fill="#7A5B47"/><rect x="2" y="3" width="1" height="1" fill="#7A5B47"/><rect x="3" y="3" width="1" height="1" fill="#A98B72"/><rect x="4" y="3" width="1" height="1" fill="#A98B72"/><rect x="5" y="3" width="1" height="1" fill="#A98B72"/><rect x="6" y="3" width="1" height="1" fill="#A98B72"/><rect x="7" y="3" width="1" height="1" fill="#7A5B47"/><rect x="8" y="3" width="1" height="1" fill="#7A5B47"/><rect x="9" y="3" width="1" height="1" fill="#7A5B47"/><rect x="0" y="4" width="1" height="1" fill="#7A5B47"/><rect x="1" y="4" width="1" height="1" fill="#7A5B47"/><rect x="2" y="4" width="1" height="1" fill="#A98B72"/><rect x="3" y="4" width="1" height="1" fill="#A98B72"/><rect x="4" y="4" width="1" height="1" fill="#1B1917"/><rect x="5" y="4" width="1" height="1" fill="#1B1917"/><rect x="6" y="4" width="1" height="1" fill="#A98B72"/><rect x="7" y="4" width="1" height="1" fill="#A98B72"/><rect x="8" y="4" width="1" height="1" fill="#7A5B47"/><rect x="9" y="4" width="1" height="1" fill="#7A5B47"/><rect x="1" y="5" width="1" height="1" fill="#7A5B47"/><rect x="2" y="5" width="1" height="1" fill="#A98B72"/><rect x="3" y="5" width="1" height="1" fill="#A98B72"/><rect x="4" y="5" width="1" height="1" fill="#A98B72"/><rect x="5" y="5" width="1" height="1" fill="#A98B72"/><rect x="6" y="5" width="1" height="1" fill="#A98B72"/><rect x="7" y="5" width="1" height="1" fill="#A98B72"/><rect x="8" y="5" width="1" height="1" fill="#7A5B47"/><rect x="1" y="6" width="1" height="1" fill="#7A5B47"/><rect x="2" y="6" width="1" height="1" fill="#A98B72"/><rect x="3" y="6" width="1" height="1" fill="#A98B72"/><rect x="4" y="6" width="1" height="1" fill="#A98B72"/><rect x="5" y="6" width="1" height="1" fill="#A98B72"/><rect x="6" y="6" width="1" height="1" fill="#A98B72"/><rect x="7" y="6" width="1" height="1" fill="#A98B72"/><rect x="8" y="6" width="1" height="1" fill="#7A5B47"/><rect x="2" y="7" width="1" height="1" fill="#7A5B47"/><rect x="3" y="7" width="1" height="1" fill="#A98B72"/><rect x="4" y="7" width="1" height="1" fill="#A98B72"/><rect x="5" y="7" width="1" height="1" fill="#A98B72"/><rect x="6" y="7" width="1" height="1" fill="#A98B72"/><rect x="7" y="7" width="1" height="1" fill="#7A5B47"/><rect x="2" y="8" width="1" height="1" fill="#7A5B47"/><rect x="3" y="8" width="1" height="1" fill="#A98B72"/><rect x="4" y="8" width="1" height="1" fill="#A98B72"/><rect x="5" y="8" width="1" height="1" fill="#A98B72"/><rect x="6" y="8" width="1" height="1" fill="#A98B72"/><rect x="7" y="8" width="1" height="1" fill="#7A5B47"/><rect x="2" y="9" width="1" height="1" fill="#A98B72"/><rect x="3" y="9" width="1" height="1" fill="#A98B72"/><rect x="6" y="9" width="1" height="1" fill="#A98B72"/><rect x="7" y="9" width="1" height="1" fill="#A98B72"/></svg>
+              <div class="reward-card__name">Otter</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="showcase__panel" data-panel="applock">
+          <div class="lock-preview">
+            <svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" aria-hidden="true">
+              <path d="M12 3.5c3.9 0 7 3.1 7 7v2c0 1.9-.3 3.7-1 5.3"/>
+              <path d="M12 3.5c-3.9 0-7 3.1-7 7v2c0 1 .1 2.1.4 3.2"/>
+              <path d="M12 7.2c2.6 0 4.7 2.1 4.7 4.7v1.6c0 1.6-.3 3.1-.9 4.5"/>
+              <path d="M12 7.2c-2.6 0-4.7 2.1-4.7 4.7v2c0 2.3.6 4.5 1.7 6.4"/>
+              <path d="M12 10.8c1.4 0 2.6 1.1 2.6 2.6v1.1c0 1.6-.4 3.1-1.1 4.5"/>
+              <path d="M9.6 14.5c0-1.4 1.1-2.6 2.4-2.6"/>
+              <path d="M9.9 19.4c-.6-1-1-2.1-1.2-3.3"/>
+            </svg>
+            <div class="preview-lock"><span></span><span></span><span></span><span></span></div>
+          </div>
+          <p class="preview-caption">Locked with a PIN/biometric on launch</p>
+        </div>
+
+        <div class="showcase__panel" data-panel="calendar">
+          <div class="cal-settings">
+            <div class="cal-settings__row">
+              <span class="cal-settings__dot"></span>
+              <span class="cal-settings__email">you@gmail.com</span>
+            </div>
+            <div class="cal-settings__toggle-row">
+              <span class="cal-settings__label">Import events</span>
+              <span class="mini-switch"></span>
+            </div>
+            <div class="cal-settings__export-row">
+              <span class="cal-settings__label">Export</span>
+              <div class="cal-settings__export-options">
+                <span class="cal-pill is-active">ASK</span>
+                <span class="cal-pill">ALWAYS</span>
+                <span class="cal-pill">NEVER</span>
+              </div>
+            </div>
+            <div class="cal-settings__meta">Last synced: Aug 2, 9:14 AM</div>
+          </div>
+        </div>
+
+        <div class="showcase__panel" data-panel="export">
+          <div class="preview-export">cove-export-2026-08-03.json</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="container">
+    <div class="tide"></div>
+  </div>
+
+  <section class="container reveal">
+    <div class="section__head">
+      <p class="eyebrow">Requirements</p>
+      <h2 class="section__title">Nothing to set up.</h2>
+    </div>
+    <div class="specs">
+      <div class="specs__item">
+        <div class="specs__label">ANDROID</div>
+        <div class="specs__value">7.0 or newer</div>
+      </div>
+      <div class="specs__item">
+        <div class="specs__label">iOS</div>
+        <div class="specs__value">Not currently planned</div>
+      </div>
+      <div class="specs__item">
+        <div class="specs__label">CONNECTIVITY</div>
+        <div class="specs__value">Works offline</div>
+      </div>
+    </div>
+
+    <div class="changelog">
+      <p class="eyebrow" style="margin-bottom: 1rem;">Patch notes</p>
+      <div class="changelog__version reveal" data-stagger="0" style="border-top: none;">
+        <div class="changelog__version-tag">v1.0.1</div>
+        <ul>
+          <li>Fixed Google Calendar export crashing on Android</li>
+          <li>Notification permission is now asked for upfront, in onboarding and Settings</li>
+          <li>Calendar week header disambiguated and first day of week now respected in Month view too</li>
+          <li>Time-blocked items now show up in Up Next, in-app and in widgets</li>
+          <li>Fixed an intermittent error opening the app from a home screen widget tap</li>
+          <li>Added a privacy policy</li>
+        </ul>
+      </div>
+      <div class="changelog__version reveal" data-stagger="1">
+        <div class="changelog__version-tag">v1.0.0</div>
+        <ul>
+          <li>First build version of Cove</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer container">
+    <div class="footer__links">
+      <a href="privacy.html">Privacy</a>
+      <a href="https://github.com/silhou-00/cove" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://github.com/silhou-00/cove/releases" target="_blank" rel="noopener">Releases</a>
+    </div>
+    <p class="footer__tagline">more functionalities to appear later</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

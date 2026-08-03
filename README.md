@@ -12,7 +12,7 @@ You capture a task with a short typed line (Quick Add parses out its category, p
 
 Most to-do apps assume you want an account, a cloud sync, and a subscription tier. Cove was built on the opposite assumption: a single person, on one device, who wants to capture and follow through on tasks as fast as possible, with nothing running in the background that isn't strictly needed to do that. There's no signup step, no server round-trip when you save a task, and no telemetry collecting usage data — the entire feature set works the same on a plane with no signal as it does at home.
 
-On top of that foundation, Cove adds a lightweight motivation layer: completing tasks earns XP toward a level, and leveling up unlocks purely cosmetic rewards (accent themes, pets, furniture) — never anything that gates or changes how the app functions. It's meant to make finishing tasks feel a little more rewarding, without turning task management into a guilt mechanism: there's no XP loss for missed tasks and no streak that resets to zero.
+On top of that foundation, Cove adds a lightweight motivation layer: completing tasks earns XP toward a level, and leveling up unlocks purely cosmetic rewards (accent themes, pets, furniture) — never anything that gates or changes how the app functions. There's still no streak that resets to zero, but letting a task or time block slip past its deadline does cost a small percentage of your current XP (never below zero, and only once per task) — enough to keep XP tied to actually following through, without turning task management into a guilt mechanism.
 
 ## Features
 
@@ -21,7 +21,7 @@ On top of that foundation, Cove adds a lightweight motivation layer: completing 
 - **Recurring tasks** — daily/weekly/custom recurrence, each occurrence tracked and completed independently
 - **Local reminders** — exact-time notifications with a per-task configurable lead time, no push server involved
 - **Home-screen widgets** — Agenda, Up Next, and Areas widgets, including tap-to-complete directly from the widget
-- **Gamification** — completing tasks earns XP toward a level; leveling up unlocks purely cosmetic pets, furniture, and accent themes
+- **Gamification** — completing tasks earns XP toward a level; leveling up unlocks purely cosmetic pets, furniture, and accent themes. Letting something go overdue costs a small percentage of current XP, once, floored at zero
 - **App Lock** — optional PIN or biometric lock on the app itself
 - **Google Calendar sync** — optional, off by default; export tasks to your calendar with configurable per-item or automatic modes
 - **JSON export/import** — back up or move your data manually, since there's no cloud backup

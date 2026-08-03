@@ -35,6 +35,10 @@ class _CoveAppState extends ConsumerState<CoveApp> {
     // the app has to be open to see it anyway, so this only needs to run
     // once per launch, not in the background.
     ref.read(itemRepositoryProvider).extendRecurrenceHorizons();
+    // Overdue XP penalty (§17 addendum) — same lazy on-open pattern as
+    // the horizon top-up above; the exact moment doesn't matter, only
+    // that it's caught the next time the app is actually opened.
+    ref.read(itemRepositoryProvider).applyOverduePenalties();
   }
 
   /// Notification tap → `/item/[id]` (§7). Covers both the app being

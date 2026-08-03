@@ -163,6 +163,61 @@ void main() {
     });
   });
 
+  group('applyOverduePenalty (§17 addendum, overdue XP penalty)', () {
+    Future<void> seedXp(int amount, {String itemId = 'seed'}) async {
+      await db
+          .into(db.xpLogs)
+          .insert(
+            XpLogsCompanion.insert(
+              id: 'seed-$amount-${DateTime.now().microsecondsSinceEpoch}',
+              itemId: itemId,
+              xpAwarded: amount,
+              awardedAt: DateTime(2026, 8, 1),
+            ),
+          );
+    }
+
+    test('logs a negative XpLog row worth the configured rate of current XP', () async {
+      final id = await makeItem('i1');
+      await seedXp(1000);
+
+      await repo.applyOverduePenalty(id);
+
+      final rows = await db.select(db.xpLogs).get();
+      final penaltyRow = rows.firstWhere((r) => r.itemId == id);
+      expect(penaltyRow.xpAwarded, -Gamification.overduePenalty(1000));
+      expect(await repo.totalXp(), 1000 - Gamification.overduePenalty(1000));
+    });
+
+    test('floors at 0 instead of going negative for a low-XP player', () async {
+      final id = await makeItem('i1');
+      await seedXp(1);
+
+      await repo.applyOverduePenalty(id);
+
+      expect(await repo.totalXp(), greaterThanOrEqualTo(0));
+    });
+
+    test('no-ops (no log row) when current XP is already 0', () async {
+      final id = await makeItem('i1');
+
+      await repo.applyOverduePenalty(id);
+
+      expect(await db.select(db.xpLogs).get(), isEmpty);
+    });
+
+    test('can delevel a player when the cut crosses a level threshold', () async {
+      final id = await makeItem('i1');
+      // Level 2 starts at 100 XP; 101 sits just past the threshold.
+      await seedXp(101);
+      expect(await repo.watchLevel().first, 2);
+
+      await repo.applyOverduePenalty(id);
+
+      expect(await repo.watchLevel().first, 1);
+    });
+  });
+
   group('totalXp / watchLevel (§17)', () {
     test('totalXp sums every logged row', () async {
       final a = await makeItem('a');

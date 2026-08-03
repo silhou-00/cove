@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cove Privacy Policy</title>
+  <meta name="description" content="Cove's privacy policy: what's stored locally, what Google Calendar sync can access, and what is never collected." />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <nav class="nav" aria-label="Primary">
+    <a class="nav__brand" href="index.html">Cove</a>
+    <div class="nav__links">
+      <a href="privacy.html">Privacy</a>
+      <a href="https://github.com/silhou-00/cove" target="_blank" rel="noopener">GitHub</a>
+      <a class="nav__cta" href="https://github.com/silhou-00/cove/releases" target="_blank" rel="noopener">Download</a>
+    </div>
+  </nav>
+  <div class="nav-spacer"></div>
+
+  <header class="doc-header container">
+    <p class="eyebrow">Legal</p>
+    <h1>Privacy Policy</h1>
+    <p class="doc-header__meta">Last updated August 2, 2026</p>
+  </header>
+
+  <div class="container">
+    <div class="tide"></div>
+  </div>
+
+  <section class="container reveal doc-section">
+    <p>Cove is a local-first task manager. All of your data stays on your device. Cove has no backend server, no user accounts, and no analytics or telemetry of any kind.</p>
+  </section>
+
+  <section class="container reveal doc-section">
+    <h2>Data stored locally</h2>
+    <p>Everything you enter into Cove, tasks, notes, schedules, categories, your app lock PIN, is stored only in a local database file on your device. None of it is ever transmitted anywhere unless you explicitly enable Google Calendar sync, described below. Uninstalling the app deletes this data.</p>
+  </section>
+
+  <div class="container">
+    <div class="tide"></div>
+  </div>
+
+  <section class="container reveal doc-section">
+    <h2>Google Calendar access, optional, off by default</h2>
+    <p>Google Calendar sync is turned off by default. If you choose to connect it from Settings, Cove requests access to your Google Calendar through Google Sign-In:</p>
+    <ul>
+      <li><strong>Read access</strong> (<code>calendar.events.readonly</code>) is requested when you connect, so Cove can show your existing Google Calendar events alongside your Cove tasks.</li>
+      <li><strong>Write access</strong> (<code>calendar.events</code>) is requested only if and when you turn on an export mode that lets Cove create or delete events on your calendar. This scope is never requested until you actually enable that feature.</li>
+    </ul>
+    <p>Cove only ever reads or writes calendar event data. It never requests access to any other Google service, such as Gmail, Drive, or Contacts. Your connected Google account's email address is stored locally on your device, only to show which account is connected, and is never sent anywhere.</p>
+    <p>You can disconnect Google Calendar at any time from Settings, which revokes Cove's access to your account.</p>
+  </section>
+
+  <div class="container">
+    <div class="tide"></div>
+  </div>
+
+  <section class="container reveal doc-section">
+    <h2>Data sharing</h2>
+    <p>Cove does not share, sell, or transmit any of your data to any third party. There is no analytics SDK, no crash reporter, no advertising network, and no server operated by Cove or its developer.</p>
+  </section>
+
+  <section class="container reveal doc-section">
+    <h2>Changes to this policy</h2>
+    <p>Any change to how Cove handles data will be reflected in this page.</p>
+  </section>
+
+  <section class="container reveal doc-section">
+    <h2>Contact</h2>
+    <p>Questions about this policy or Cove's data handling: <a href="https://github.com/silhou-00">github.com/silhou-00</a>.</p>
+  </section>
+
+  <footer class="footer container">
+    <div class="footer__links">
+      <a href="privacy.html">Privacy</a>
+      <a href="https://github.com/silhou-00/cove" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://github.com/silhou-00/cove/releases" target="_blank" rel="noopener">Releases</a>
+    </div>
+    <p class="footer__tagline">more functionalities to appear later</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

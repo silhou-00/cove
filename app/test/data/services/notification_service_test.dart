@@ -169,6 +169,24 @@ void main() {
     });
   });
 
+  group('momentBody (§7 addendum, start/end/due-now notifications)', () {
+    test('is just the label when there are no notes', () {
+      expect(momentBody('Started', null), 'Started');
+      expect(momentBody('Started', ''), 'Started');
+    });
+
+    test('appends a notes preview when notes are present', () {
+      expect(momentBody('Ended', 'Bring the folder'), 'Ended · Bring the folder');
+    });
+
+    test('truncates a long notes preview with an ellipsis', () {
+      final body = momentBody('Due now', 'x' * 200);
+      expect(body, startsWith('Due now · '));
+      expect(body, endsWith('…'));
+      expect(body.length, lessThan(200));
+    });
+  });
+
   group('notificationIdFor', () {
     test('is deterministic and non-negative', () {
       final id = notificationIdFor('some-item-id');

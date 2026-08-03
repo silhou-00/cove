@@ -43,10 +43,23 @@ class Gamification {
 
   static const maxLevel = 10;
 
+  /// Overdue penalty (§17 addendum, on user request) — a deliberate,
+  /// one-off exception to the otherwise positive-only design above. A
+  /// percentage rather than a flat amount so the deduction actually
+  /// stings a high-XP player as much as a new one, not just in absolute
+  /// terms but relative to what they've banked.
+  static const overduePenaltyRate = 0.025;
+
   /// A random pick from [xpOptions] — [random] is injectable so tests can
   /// pass a seeded `Random` instead of the wall-clock-seeded default.
   static int xpForCompletion([Random? random]) =>
       xpOptions[(random ?? Random()).nextInt(xpOptions.length)];
+
+  /// [overduePenaltyRate] of [currentXp], floored so it can never exceed
+  /// what's actually banked — a level-1 player with little or no XP loses
+  /// little or nothing, rather than going negative.
+  static int overduePenalty(int currentXp) =>
+      min((currentXp * overduePenaltyRate).round(), currentXp);
 
   /// The level [totalXp] currently sits at — derived, never stored, so it
   /// can't desync from the underlying XP log. Caps at [maxLevel]; §17
