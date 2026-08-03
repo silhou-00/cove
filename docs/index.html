@@ -3,6 +3,7 @@
 <head>
   <script>document.documentElement.classList.add('js');</script>
   <meta charset="UTF-8" />
+  <meta name="google-site-verification" content="CnpPWbdmqC6ZKWp6J1zPWoqQ3BeqE9sh8wnc2s-SfhE" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Cove, a calm offline-first task manager</title>
   <meta name="description" content="Cove is a local-first task manager for Android. Quick Add parsing, home screen widgets, positive-only gamification, and optional Google Calendar sync." />
@@ -21,7 +22,7 @@
   <div class="nav-spacer"></div>
 
   <header class="hero container">
-    <p class="eyebrow hero__kicker">Task manager for Android</p>
+    <p class="eyebrow hero__kicker">Task manager for Mobile</p>
     <div class="hero__brand-row">
       <img class="hero__icon" src="assets/img/cove-icon.png" alt="Cove app icon" width="80" height="80" />
       <h1 class="hero__title">Cove</h1>
@@ -60,8 +61,26 @@
     <div class="section-body">
       <span class="section-body__bar"></span>
       <div class="section-body__text">
-        <p class="lede">Cove is a single-user, offline-first task manager. Everything you type in, tasks, schedules, recurring items, categories, is stored only in a local database on your phone. There's no account, no login, and no backend server involved at any point.</p>
-        <p>Type a task in plain language and Quick Add figures out the category, priority, and schedule for you. From there Cove gives you a few different ways to look at the same list: what's happening today, what needs attention soon, and a weekly view of anything you've time-blocked.</p>
+        <p class="lede">Cove is a personal task and agenda manager built for Android. It's a single-user, offline-first app: everything you enter, tasks, schedules, recurring items, categories, is stored in a local database on your phone, with no account, no login, and no backend server involved at any point.</p>
+        <p>You capture a task with a short typed line (Quick Add parses out its category, priority, and schedule for you), and from there Cove gives you a few different ways to look at the same data: what's due today, what needs attention soon, and a weekly view of anything you've time-blocked. Three home screen widgets mirror those views so you can check and complete tasks without opening the app, and local notifications remind you ahead of a task's scheduled time, all computed on your device, with no push service involved. If you want your schedule to also show up in Google Calendar, that's available as an optional, off by default sync, described further down this page.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="container">
+    <div class="tide"></div>
+  </div>
+
+  <section class="container reveal">
+    <div class="section__head">
+      <p class="eyebrow">Purpose of Cove</p>
+      <h2 class="section__title">Built for one person on one device, not an account.</h2>
+    </div>
+    <div class="section-body">
+      <span class="section-body__bar"></span>
+      <div class="section-body__text">
+        <p class="lede">Most task managers assume you want an account, a cloud sync, and a subscription tier. Cove assumes the opposite: one person, one device, no signup, no server round trip, no telemetry.</p>
+        <p>Completing tasks earns XP toward a level, and leveling up unlocks purely cosmetic rewards like accent themes, pets, and furniture, never anything that changes how the app functions.</p>
       </div>
     </div>
   </section>
@@ -309,7 +328,7 @@
         <div class="showcase__item" data-panel="calendar">
           <p class="showcase__num">07</p>
           <h3 class="showcase__item-title">Google Calendar</h3>
-          <p class="showcase__item-desc">Optional, off by default. See the <a href="privacy.html">privacy policy</a> for exactly what it can access.</p>
+          <p class="showcase__item-desc">Optional, off by default. If you turn it on from Settings, Cove asks for read access to show your existing events alongside your tasks, and only asks for write access later if you also turn on export. Full detail in the <a href="privacy.html">privacy policy</a>.</p>
           <div class="showcase__inline-mock">
             <div class="cal-settings">
               <div class="cal-settings__row">
